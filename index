@@ -1,0 +1,2810 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#ff8c42" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="每日任務卡大冒險" />
+  <title>每日任務卡大冒險（澆花＋養怪獸養成版）</title>
+  <style>
+    :root {
+      --bg-grad-start: #fff7e8;
+      --bg-grad-end: #eef7ff;
+      --card: #ffffff;
+      --text: #25293a;
+      --muted: #667085;
+      --gold: #ffb703;
+      --gold-shadow: #d99300;
+      --done-bg: #ecfdf3;
+      --done-border: #34c77b;
+      --done-shadow: #1f9256;
+      --danger: #ff5a5f;
+      --danger-shadow: #c8373c;
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 18px;
+      --shadow-card: 0 10px 24px rgba(37, 41, 58, 0.08);
+    }
+
+    body.theme-kinder {
+      --bg-grad-start: #fff8e6;
+      --bg-grad-end: #e9fbf0;
+      --primary: #38b764;
+      --primary-shadow: #218644;
+      --primary-soft: #e6f9ed;
+      --accent: #ff9f1c;
+      --accent-shadow: #cf7600;
+    }
+
+    body.theme-elem {
+      --bg-grad-start: #fff3eb;
+      --bg-grad-end: #eef4ff;
+      --primary: #ff7b47;
+      --primary-shadow: #cc5222;
+      --primary-soft: #fff0e8;
+      --accent: #4f8ef7;
+      --accent-shadow: #2e66c7;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(180deg, var(--bg-grad-start) 0%, var(--bg-grad-end) 100%);
+      color: var(--text);
+      padding: 16px 16px 104px;
+      transition: background 0.3s ease;
+    }
+
+    .app {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .toy-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 13px 20px;
+      font-size: 1.02rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      position: relative;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.15s ease;
+      user-select: none;
+    }
+
+    .toy-btn:hover { filter: brightness(1.03); }
+    .toy-btn:active { transform: translateY(4px); }
+    .toy-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .toy-primary {
+      background: var(--primary, #ff8c42);
+      color: #ffffff;
+      box-shadow: 0 5px 0 var(--primary-shadow, #cc621d), 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .toy-accent {
+      background: var(--accent, #4ecdc4);
+      color: #ffffff;
+      box-shadow: 0 5px 0 var(--accent-shadow, #2b9e96), 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .toy-gold {
+      background: var(--gold);
+      color: #2b2100;
+      box-shadow: 0 5px 0 var(--gold-shadow), 0 8px 16px rgba(217, 147, 0, 0.22);
+    }
+
+    .toy-soft {
+      background: #ffffff;
+      color: var(--text);
+      border: 2px solid #e2e8f0;
+      box-shadow: 0 4px 0 #cbd5e1, 0 6px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .toy-done {
+      background: var(--done-border);
+      color: #ffffff;
+      box-shadow: 0 5px 0 var(--done-shadow), 0 8px 14px rgba(31, 146, 86, 0.2);
+    }
+
+    .toy-danger {
+      background: var(--danger);
+      color: #ffffff;
+      box-shadow: 0 5px 0 var(--danger-shadow);
+    }
+
+    .toy-sm { padding: 9px 15px; font-size: 0.92rem; }
+    .toy-block { width: 100%; border-radius: 20px; padding: 14px 18px; font-size: 1.08rem; }
+
+    .role-screen {
+      background: var(--card);
+      border-radius: var(--radius-xl);
+      padding: 26px 20px;
+      box-shadow: var(--shadow-card);
+      text-align: center;
+      border: 3px solid #fff;
+    }
+
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff3cd;
+      color: #8a5a00;
+      font-weight: 800;
+      padding: 7px 16px;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      box-shadow: 0 3px 0 #f2d06b;
+    }
+
+    .role-screen h1 { margin: 14px 0 6px; font-size: 1.75rem; }
+    .role-screen .subtitle { margin: 0 0 22px; color: var(--muted); font-size: 1rem; }
+
+    .role-cards {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    @media (min-width: 540px) {
+      .role-cards { grid-template-columns: 1fr 1fr; }
+    }
+
+    .role-card {
+      border-radius: var(--radius-xl);
+      padding: 22px 18px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    .role-card:active { transform: translateY(4px); }
+
+    .role-card.dino {
+      background: linear-gradient(180deg, #f2fff6 0%, #dcfce7 100%);
+      border: 3px solid #4ade80;
+      box-shadow: 0 7px 0 #22c55e, 0 12px 20px rgba(34, 197, 94, 0.16);
+    }
+
+    .role-card.cat {
+      background: linear-gradient(180deg, #fff6f0 0%, #ffedd5 100%);
+      border: 3px solid #fb923c;
+      box-shadow: 0 7px 0 #f97316, 0 12px 20px rgba(249, 115, 22, 0.16);
+    }
+
+    .role-badge-age {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    .role-art {
+      margin: 4px auto 12px;
+      width: 96px;
+      height: 96px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .role-name { font-size: 1.35rem; font-weight: 900; margin-bottom: 8px; }
+    .role-stats { font-size: 0.95rem; font-weight: 700; color: var(--muted); margin-bottom: 14px; }
+
+    .role-go-pill {
+      display: inline-block;
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: #fff;
+    }
+
+    .role-card.dino .role-go-pill { background: #22c55e; box-shadow: 0 4px 0 #15803d; }
+    .role-card.cat .role-go-pill { background: #f97316; box-shadow: 0 4px 0 #c2410c; }
+
+    .install-banner {
+      background: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .main-screen { display: none; }
+    .main-screen.active { display: block; }
+    .role-screen.hidden { display: none; }
+
+    .top-bar {
+      background: var(--card);
+      border-radius: var(--radius-xl);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      border: 3px solid #fff;
+    }
+
+    .profile-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+    .avatar-box {
+      width: 58px;
+      height: 58px;
+      border-radius: 20px;
+      background: var(--primary-soft, #fff3e6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.06);
+    }
+
+    .profile-name { font-size: 1.2rem; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .profile-sub { font-size: 0.84rem; color: var(--muted); font-weight: 700; }
+    .top-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    .star-pill {
+      background: #fff4c2;
+      border: 2px solid var(--gold);
+      box-shadow: 0 4px 0 var(--gold-shadow);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-weight: 900;
+      font-size: 1.05rem;
+      color: #6b4600;
+      white-space: nowrap;
+    }
+
+    .storage-warn-bar {
+      background: #fffbeb;
+      border: 2px solid #f59e0b;
+      color: #92400e;
+      border-radius: 16px;
+      padding: 10px 14px;
+      font-size: 0.84rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .road-map-card {
+      background: var(--card);
+      border-radius: var(--radius-xl);
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 14px;
+      border: 3px solid #fff;
+    }
+
+    .map-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+
+    .map-title { font-size: 1.1rem; font-weight: 900; }
+    .map-sub { font-size: 0.86rem; color: var(--muted); margin-bottom: 12px; line-height: 1.45; }
+
+    .cute-nav-map {
+      position: relative;
+      width: 100%;
+      height: 410px;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 3px solid #bce3c5;
+      background: linear-gradient(180deg, #dff6e5 0%, #eefaf0 55%, #fff5d6 100%);
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.06);
+      user-select: none;
+    }
+
+    .nav-svg-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .nav-endpoint {
+      position: absolute;
+      z-index: 2;
+      transform: translate(-50%, -50%);
+      background: #ffffff;
+      border: 2.5px solid #1e293b;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 0.76rem;
+      font-weight: 900;
+      color: #1e293b;
+      box-shadow: 0 3px 0 rgba(15, 23, 42, 0.16);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .nav-endpoint.start {
+      background: #fee2e2;
+      border-color: #dc2626;
+      color: #991b1b;
+    }
+
+    .nav-endpoint.finish {
+      background: #fef3c7;
+      border-color: #d97706;
+      color: #92400e;
+    }
+
+    .building-node {
+      position: absolute;
+      z-index: 3;
+      transform: translate(-50%, -50%);
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.96);
+      border: 3px solid #475569;
+      box-shadow: 0 4px 0 #475569, 0 6px 12px rgba(0, 0, 0, 0.12);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .building-node:hover {
+      transform: translate(-50%, -54%) scale(1.05);
+    }
+
+    .building-node:active {
+      transform: translate(-50%, -46%);
+    }
+
+    .building-node.active-target {
+      border-color: #ef4444;
+      box-shadow: 0 5px 0 #dc2626, 0 0 0 4px rgba(239, 68, 68, 0.22);
+    }
+
+    .building-node.done {
+      background: #dcfce7;
+      border-color: #16a34a;
+      box-shadow: 0 4px 0 #15803d;
+    }
+
+    .building-emoji {
+      font-size: 1.55rem;
+      line-height: 1.05;
+    }
+
+    .building-step {
+      font-size: 0.66rem;
+      font-weight: 900;
+      color: #334155;
+      margin-top: 1px;
+    }
+
+    .building-lock-dot {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: #16a34a;
+      color: #ffffff;
+      border-radius: 999px;
+      font-size: 0.62rem;
+      padding: 1px 4px;
+      font-weight: 900;
+      border: 1.5px solid #fff;
+    }
+
+    .walker-pin {
+      position: absolute;
+      z-index: 8;
+      left: 12%;
+      top: 14%;
+      transform: translate(-50%, -82%);
+      transition: left 0.85s cubic-bezier(0.22, 1, 0.36, 1), top 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .walker-bubble {
+      background: #ffffff;
+      border: 3px solid #1e293b;
+      border-radius: 999px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 5px 0 rgba(15, 23, 42, 0.22);
+    }
+
+    .walker-pin.walking .walker-bubble {
+      animation: mapWalkStep 0.32s ease-in-out infinite alternate;
+    }
+
+    @keyframes mapWalkStep {
+      0% { transform: translateY(0px) rotate(-5deg); }
+      100% { transform: translateY(-6px) rotate(5deg); }
+    }
+
+    .walker-shadow {
+      width: 24px;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.22);
+      margin-top: 2px;
+    }
+
+    .goal-house-box {
+      margin-top: 12px;
+      background: #fffbeb;
+      border: 3px solid #f59e0b;
+      border-radius: 18px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 4px 0 #d97706;
+    }
+
+    .goal-house-box.unlocked {
+      background: #ecfdf5;
+      border-color: #22c55e;
+      box-shadow: 0 4px 0 #16a34a;
+    }
+
+    .must-alert {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #b91c1c;
+      background: #fef2f2;
+      border: 1.5px solid #fecaca;
+      border-radius: 12px;
+      padding: 8px 12px;
+    }
+
+    .progress-card {
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      padding: 14px 18px;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 16px;
+    }
+
+    .progress-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 800;
+      font-size: 0.96rem;
+      margin-bottom: 10px;
+    }
+
+    .progress-track {
+      height: 18px;
+      background: #edf2f7;
+      border-radius: 999px;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary, #38b764), var(--gold));
+      border-radius: 999px;
+      transition: width 0.35s ease;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 900;
+      margin: 6px 2px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .task-list { display: flex; flex-direction: column; gap: 14px; }
+
+    .task-card {
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+      border: 3px solid transparent;
+      transition: transform 0.14s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .task-card.done { background: var(--done-bg); border-color: var(--done-border); }
+    .task-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+
+    .task-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      background: var(--primary-soft, #f8fafc);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.85rem;
+      flex-shrink: 0;
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.06);
+    }
+
+    .task-info { flex: 1; min-width: 0; }
+    .task-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .task-title { font-size: 1.15rem; font-weight: 900; line-height: 1.3; }
+    .badge-row { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+    .core-badge {
+      background: #fee2e2;
+      color: #b91c1c;
+      font-weight: 900;
+      font-size: 0.78rem;
+      padding: 4px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .lock-badge {
+      background: #e2e8f0;
+      color: #334155;
+      font-weight: 900;
+      font-size: 0.78rem;
+      padding: 4px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .star-tag {
+      background: #fff4c2;
+      color: #8a5a00;
+      font-weight: 900;
+      font-size: 0.9rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+      box-shadow: 0 2px 0 #e6b82e;
+    }
+
+    .task-desc { margin-top: 4px; font-size: 0.9rem; color: var(--muted); line-height: 1.4; }
+    .task-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .task-actions .toy-btn {
+      flex: 1;
+      min-width: 130px;
+      border-radius: 18px;
+      padding: 12px 14px;
+      font-size: 1rem;
+    }
+
+    .panel-card {
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 16px;
+    }
+
+    /* 澆花與養怪獸養成區樣式 */
+    .garden-stage {
+      background: linear-gradient(180deg, #e0f7fa 0%, #e8f5e9 65%, #d7ccc8 100%);
+      border: 3px solid #81c784;
+      border-radius: 22px;
+      padding: 18px 14px;
+      text-align: center;
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    .plant-display {
+      font-size: 4rem;
+      line-height: 1.15;
+      display: inline-block;
+      transition: transform 0.25s ease;
+    }
+
+    .plant-display.pop {
+      animation: nurturePop 0.45s ease;
+    }
+
+    @keyframes nurturePop {
+      0% { transform: scale(0.85); }
+      50% { transform: scale(1.22) rotate(-6deg); }
+      100% { transform: scale(1); }
+    }
+
+    .monster-stage {
+      background: linear-gradient(180deg, #ede9fe 0%, #fae8ff 60%, #dcfce7 100%);
+      border: 3px solid #c084fc;
+      border-radius: 22px;
+      padding: 18px 14px;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .monster-avatar-btn {
+      background: rgba(255, 255, 255, 0.85);
+      border: 3px solid #9333ea;
+      border-radius: 999px;
+      width: 104px;
+      height: 104px;
+      font-size: 3.8rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #7e22ce;
+      transition: transform 0.15s ease;
+    }
+
+    .monster-avatar-btn:active {
+      transform: translateY(4px);
+    }
+
+    .monster-picker-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .monster-chip {
+      border: 2px solid #cbd5e1;
+      background: #ffffff;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.86rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .monster-chip.selected {
+      background: #f3e8ff;
+      border-color: #9333ea;
+      color: #6b21a8;
+    }
+
+    .nurture-bar-track {
+      height: 14px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 10px auto 6px;
+      max-width: 340px;
+      border: 1.5px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .nurture-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #34d399, #a855f7);
+      border-radius: 999px;
+      transition: width 0.35s ease;
+    }
+
+    .streak-banner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .streak-box {
+      background: #fffbeb;
+      border: 2px solid #fde68a;
+      border-radius: 18px;
+      padding: 12px 14px;
+      text-align: center;
+    }
+
+    .streak-num {
+      font-size: 1.45rem;
+      font-weight: 900;
+      color: #b45309;
+    }
+
+    .streak-lbl {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.92rem;
+    }
+
+    .history-item:last-child { border-bottom: none; }
+
+    .full-pass-pill {
+      background: #dcfce7;
+      color: #15803d;
+      font-size: 0.78rem;
+      font-weight: 900;
+      padding: 3px 9px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .partial-pass-pill {
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 0.78rem;
+      font-weight: 900;
+      padding: 3px 9px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .ticket-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .ticket-item {
+      background: #fffbeb;
+      border: 2px dashed #f59e0b;
+      border-radius: 18px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .reward-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    @media (min-width: 520px) { .reward-grid { grid-template-columns: 1fr 1fr; } }
+
+    .reward-card {
+      background: #fffdf7;
+      border: 2.5px solid #fde68a;
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 5px 0 #f3d577;
+    }
+
+    .reward-icon { font-size: 2.1rem; }
+    .reward-title { font-size: 1.1rem; font-weight: 900; margin: 4px 0; }
+    .reward-desc { font-size: 0.86rem; color: var(--muted); margin-bottom: 6px; }
+
+    .reward-cost {
+      display: inline-block;
+      background: #fff4c2;
+      color: #8a5a00;
+      font-weight: 900;
+      font-size: 0.88rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .log-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .log-item:last-child { border-bottom: none; }
+    .log-plus { color: #16a34a; font-weight: 900; white-space: nowrap; }
+    .log-minus { color: #dc2626; font-weight: 900; white-space: nowrap; }
+
+    .form-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+    .form-row-2 { display: grid; grid-template-columns: 112px 1fr; gap: 10px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 0.92rem;
+      padding: 4px 2px;
+    }
+
+    .check-row input[type="checkbox"] { width: 20px; height: 20px; }
+
+    input, select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 2px solid #cbd5e1;
+      font-size: 1rem;
+      background: #fff;
+    }
+
+    .manage-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f1f5f9;
+      flex-wrap: wrap;
+    }
+
+    .manage-item:last-child { border-bottom: none; }
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      border-top: 2px solid #e2e8f0;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+      z-index: 50;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      border-radius: 14px;
+      padding: 6px 2px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .nav-btn.active { color: var(--primary, #ff7b47); background: var(--primary-soft, #fff0e8); }
+    .nav-ico { font-size: 1.25rem; line-height: 1.1; }
+    .tab-page { display: none; }
+    .tab-page.active { display: block; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 100;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal-card {
+      background: #fff;
+      border-radius: var(--radius-xl);
+      padding: 24px 20px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    .landmark-info-box {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 14px;
+      margin: 12px 0 16px;
+      text-align: left;
+    }
+
+    .landmark-info-title {
+      font-weight: 900;
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+      color: #1e293b;
+    }
+
+    .landmark-info-desc {
+      font-size: 0.94rem;
+      line-height: 1.5;
+      color: #475569;
+    }
+
+    .ring-wrap { position: relative; width: 210px; height: 210px; margin: 14px auto 18px; }
+    .ring-svg { width: 210px; height: 210px; transform: rotate(-90deg); }
+    .ring-bg { fill: none; stroke: #e2e8f0; stroke-width: 16; }
+
+    .ring-progress {
+      fill: none;
+      stroke: #22c55e;
+      stroke-width: 16;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.25s linear, stroke 0.3s ease;
+    }
+
+    .ring-progress.warn { stroke: #f59e0b; }
+    .ring-progress.urgent { stroke: #ef4444; }
+
+    .ring-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .timer-digits { font-size: 2.3rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+    .timer-label { font-size: 0.85rem; color: var(--muted); font-weight: 700; }
+    .modal-actions { display: flex; flex-direction: column; gap: 10px; }
+    .modal-row { display: flex; gap: 10px; }
+    .modal-row .toy-btn { flex: 1; }
+
+    .toast {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: #1e293b;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+      z-index: 200;
+      max-width: 90vw;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="role-screen" id="roleScreen">
+      <div class="hero-pill">🗺️ 可愛導航地圖 · 澆花＋養怪獸</div>
+      <h1>今天是誰要出發？</h1>
+      <p class="subtitle">角色會像導航一樣沿著路線走向建築地標，存星星還能澆花、養怪獸！</p>
+
+      <div class="role-cards" id="roleCardsContainer">
+        <div class="role-card dino" onclick="selectRole('kinder')">
+          <div class="role-badge-age">大班專屬 · 恐龍夥伴</div>
+          <div class="role-art" aria-hidden="true">
+            <svg viewBox="0 0 120 120" width="94" height="94">
+              <ellipse cx="60" cy="106" rx="34" ry="8" fill="#bbf7d0" />
+              <path d="M26 78 C20 72, 22 60, 32 62 C36 63, 38 72, 42 74 L46 46 C47 34, 57 26, 70 26 C82 26, 90 34, 90 44 C90 52, 83 56, 76 56 L74 78 L80 96 L68 96 L65 82 L54 82 L51 96 L39 96 L42 78 Z" fill="#22c55e" stroke="#15803d" stroke-width="3.5" stroke-linejoin="round" />
+              <path d="M52 24 L57 14 L62 24 Z" fill="#facc15" stroke="#ca8a04" stroke-width="2.5" stroke-linejoin="round" />
+              <circle cx="78" cy="38" r="4.5" fill="#ffffff" />
+              <circle cx="79.5" cy="38" r="2.3" fill="#1e293b" />
+              <path d="M76 47 Q82 51 87 47" fill="none" stroke="#14532d" stroke-width="3" stroke-linecap="round" />
+            </svg>
+          </div>
+          <div class="role-name" id="homeKinderName">小恐龍探險家</div>
+          <div class="role-stats" id="homeKinderStats">⭐ 0 顆星 · 🔥 連 0 天</div>
+          <div class="role-go-pill">🦖 出發</div>
+        </div>
+
+        <div class="role-card cat" onclick="selectRole('elem')">
+          <div class="role-badge-age">國小專屬 · 貓咪隊長</div>
+          <div class="role-art" aria-hidden="true">
+            <svg viewBox="0 0 120 120" width="94" height="94">
+              <ellipse cx="60" cy="106" rx="34" ry="8" fill="#fed7aa" />
+              <path d="M30 48 L24 22 L48 36 Z" fill="#fb923c" stroke="#c2410c" stroke-width="3.5" stroke-linejoin="round" />
+              <path d="M90 48 L96 22 L72 36 Z" fill="#fb923c" stroke="#c2410c" stroke-width="3.5" stroke-linejoin="round" />
+              <ellipse cx="60" cy="64" rx="35" ry="28" fill="#fb923c" stroke="#c2410c" stroke-width="3.5" />
+              <circle cx="48" cy="60" r="4.5" fill="#1e293b" />
+              <circle cx="72" cy="60" r="4.5" fill="#1e293b" />
+              <polygon points="60,66 55,71 65,71" fill="#f43f5e" />
+            </svg>
+          </div>
+          <div class="role-name" id="homeElemName">博士貓隊長</div>
+          <div class="role-stats" id="homeElemStats">⭐ 0 顆星 · 🔥 連 0 天</div>
+          <div class="role-go-pill">🐱 出發</div>
+        </div>
+      </div>
+
+      <div class="install-banner">
+        <div>
+          <div style="font-weight: 900; font-size: 0.98rem;">📲 變成平板桌面玩具 App</div>
+          <div style="font-size: 0.85rem; color: var(--muted);">加入主畫面後全螢幕操作，按鍵更好按！</div>
+        </div>
+        <button type="button" class="toy-btn toy-soft toy-sm" onclick="openInstallModal()">安裝說明</button>
+      </div>
+    </section>
+
+    <section class="main-screen" id="mainScreen">
+      <div class="storage-warn-bar" id="storageWarnBar">
+        ⚠️ 偵測到目前瀏覽器沙盒限制永久儲存（常見於 Google Sites 內嵌或私密瀏覽），建議到「⚙️ 家長設定」複製備份碼保存紀錄。
+      </div>
+
+      <div class="top-bar">
+        <div class="profile-left">
+          <div class="avatar-box" id="activeAvatar"></div>
+          <div>
+            <div class="profile-name" id="activeName">小恐龍探險家</div>
+            <div class="profile-sub" id="activeRoleBadge">🦖 可愛導航路線</div>
+          </div>
+        </div>
+        <div class="top-right">
+          <div class="star-pill">⭐ <span id="activeStars">0</span></div>
+          <button type="button" class="toy-btn toy-soft toy-sm" onclick="backToRoleSelect()">換角色</button>
+        </div>
+      </div>
+
+      <div class="tab-page active" id="page-tasks">
+        <div class="road-map-card">
+          <div class="map-header">
+            <div class="map-title" id="mapTitle">🗺️ 可愛導航建築地圖</div>
+            <span class="star-tag" id="mapProgressBadge">已過 0 / 12 建築</span>
+          </div>
+          <div class="map-sub" id="mapSubText">
+            未走到的關卡以閉合建築呈現，點選建築即可看關卡說明並領星！
+          </div>
+
+          <div class="cute-nav-map" id="cuteNavMap">
+            <svg class="nav-svg-layer" id="navSvgLayer" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <div id="navEndpointsLayer"></div>
+            <div id="navBuildingsLayer"></div>
+            <div class="walker-pin" id="walkerPin">
+              <div class="walker-bubble" id="walkerBubble">🦖</div>
+              <div class="walker-shadow"></div>
+            </div>
+          </div>
+
+          <div class="goal-house-box" id="goalHouseBox">
+            <div style="font-weight:900; font-size:1rem;" id="goalHouseTitle">🏁 終點站</div>
+            <div style="font-size:0.86rem; color:var(--muted);" id="goalHouseDesc"></div>
+            <div class="must-alert" id="mustPhotoAlert" style="display:none;">
+              ⚠️ 核心必要條件：今天還未完成「離開學校前拍自己座位照」（放學前用手錶拍乾淨座位照並給大人看過）。
+            </div>
+            <div id="goalHouseActionWrap"></div>
+          </div>
+        </div>
+
+        <div class="progress-card">
+          <div class="progress-head">
+            <span id="progressLabel">今日導航建築進度</span>
+            <span id="progressText">0 / 0 完成</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+
+        <div class="section-title">
+          <span id="tasksSectionTitle">📋 關卡建築任務清單</span>
+          <button type="button" class="toy-btn toy-soft toy-sm" onclick="resetCurrentRoleTasks()">🔄 重置未領星</button>
+        </div>
+        <div class="task-list" id="taskList"></div>
+      </div>
+
+      <div class="tab-page" id="page-pet">
+        <div class="panel-card">
+          <div class="section-title" style="margin-top:0;">
+            <span>🌱 買澆水器澆花長大</span>
+            <span class="star-tag" id="harvestCountBadge">🌻 已收成 0 朵</span>
+          </div>
+          <div class="garden-stage">
+            <div class="plant-display" id="plantDisplay" onclick="buyWateringAndGrow()">🌱</div>
+            <div style="font-weight:900; font-size:1.1rem; margin-top:6px;" id="plantStageName">小種子階段</div>
+            <div style="font-size:0.86rem; color:var(--muted);" id="plantGrowthText">澆水 0 / 10 次即可盛開收成</div>
+            <div class="nurture-bar-track">
+              <div class="nurture-bar-fill" id="plantBarFill"></div>
+            </div>
+          </div>
+          <div class="modal-row" id="plantActionRow">
+            <button type="button" class="toy-btn toy-accent toy-block" onclick="buyWateringAndGrow()">🚿 買澆水器澆花（花費 3 ⭐，+1 成長）</button>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="section-title" style="margin-top:0;">
+            <span>👾 專屬小怪獸養成</span>
+            <span class="star-tag" id="monsterLevelBadge">Lv.1 怪獸寶寶</span>
+          </div>
+
+          <div class="monster-picker-row" id="monsterPickerRow">
+            <button type="button" class="monster-chip selected" data-m="🔥" onclick="selectMonsterType('🔥')">🔥 火龍怪獸</button>
+            <button type="button" class="monster-chip" data-m="👾" onclick="selectMonsterType('👾')">👾 紫晶怪獸</button>
+            <button type="button" class="monster-chip" data-m="🦄" onclick="selectMonsterType('🦄')">🦄 星星怪獸</button>
+          </div>
+
+          <div class="monster-stage">
+            <button type="button" class="monster-avatar-btn" id="monsterAvatarBtn" onclick="playWithMonster()" title="點我陪怪獸玩">🔥</button>
+            <div style="font-weight:900; font-size:1.12rem; margin-top:8px;" id="monsterTitleText">火龍怪獸 · Lv.1 怪獸寶寶</div>
+            <div style="font-size:0.86rem; color:var(--muted);" id="monsterExpText">怪獸成長值 0 / 25（每 10 升一級）</div>
+            <div class="nurture-bar-track">
+              <div class="nurture-bar-fill" id="monsterBarFill"></div>
+            </div>
+          </div>
+
+          <div class="modal-row">
+            <button type="button" class="toy-btn toy-primary" onclick="feedMonster()">🍖 餵營養餐（4 ⭐，+3 成長）</button>
+            <button type="button" class="toy-btn toy-gold" onclick="playWithMonster()">🎾 陪玩一下（2 ⭐，+2 成長）</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-page" id="page-rewards">
+        <div class="panel-card">
+          <div class="section-title" style="margin-top:0;">🎟️ 我的已兌換票券夾</div>
+          <div class="ticket-list" id="ticketList"></div>
+        </div>
+
+        <div class="section-title">🎁 專屬星星獎勵商店</div>
+        <div class="reward-grid" id="rewardGrid"></div>
+      </div>
+
+      <div class="tab-page" id="page-ledger">
+        <div class="panel-card">
+          <div class="section-title" style="margin-top:0;">📅 連續天數與每日通關紀錄</div>
+          <div class="streak-banner">
+            <div class="streak-box">
+              <div class="streak-num" id="streakDaysNum">🔥 0 天</div>
+              <div class="streak-lbl">目前連續通關天數</div>
+            </div>
+            <div class="streak-box">
+              <div class="streak-num" id="totalPassedDaysNum">🏅 0 天</div>
+              <div class="streak-lbl">累計有通關紀錄天數</div>
+            </div>
+          </div>
+          <div id="dailyHistoryList"></div>
+        </div>
+
+        <div class="panel-card">
+          <div class="section-title" style="margin-top:0;">📒 個人星星存摺明細</div>
+          <div id="ledgerList"></div>
+        </div>
+      </div>
+
+      <div class="tab-page" id="page-settings">
+        <div class="panel-card">
+          <div class="section-title" style="margin-top:0;">⚙️ 家長設定區</div>
+          <p class="task-desc" style="margin-bottom:14px;">目前正在設定：<strong id="settingsRoleLabel"></strong></p>
+
+          <div class="form-grid">
+            <label style="font-weight:800; font-size:0.92rem;">角色暱稱</label>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="editRoleNameInput" placeholder="輸入孩子暱稱" />
+              <button type="button" class="toy-btn toy-primary toy-sm" onclick="saveRoleName()">儲存名稱</button>
+            </div>
+          </div>
+
+          <div class="form-grid" id="tabletMinutesSettingBox" style="display:none;">
+            <label style="font-weight:800; font-size:0.92rem;">抵達終點解鎖的平板休閒時間</label>
+            <select id="tabletMinutesSelect" onchange="saveTabletMinutes()">
+              <option value="15">15 分鐘</option>
+              <option value="20" selected>20 分鐘</option>
+              <option value="25">25 分鐘</option>
+              <option value="30">30 分鐘</option>
+            </select>
+          </div>
+
+          <div class="form-grid">
+            <label style="font-weight:800; font-size:0.92rem;">快速調整星星餘額</label>
+            <div class="modal-row">
+              <button type="button" class="toy-btn toy-gold toy-sm" onclick="adjustStars(1)">＋1 ⭐</button>
+              <button type="button" class="toy-btn toy-gold toy-sm" onclick="adjustStars(5)">＋5 ⭐</button>
+              <button type="button" class="toy-btn toy-soft toy-sm" onclick="adjustStars(-1)">－1 ⭐</button>
+            </div>
+          </div>
+
+          <hr style="border:none; border-top:1px solid #e2e8f0; margin:16px 0;" />
+
+          <div class="section-title" style="font-size:1.05rem;">🔒 已領星關卡管理（家長鎖定區）</div>
+          <p class="task-desc" style="margin-bottom:10px;">
+            已領星的關卡對孩子已鎖定；若需退回星星或取消完成，請由家長在此操作：
+          </p>
+          <div id="lockedTaskManageList" style="margin-bottom:14px;"></div>
+
+          <hr style="border:none; border-top:1px solid #e2e8f0; margin:16px 0;" />
+
+          <div class="section-title" style="font-size:1.05rem;">➕ 新增地圖建築關卡</div>
+          <div class="form-grid">
+            <div class="form-row-2">
+              <select id="newTaskIcon">
+                <option value="🏠" selected>🏠 小屋</option>
+                <option value="🌳">🌳 公園</option>
+                <option value="🏟️">🏟️ 體育館</option>
+                <option value="🏫">🏫 學校</option>
+                <option value="⭐">⭐ 特別站</option>
+              </select>
+              <input type="text" id="newTaskTitle" placeholder="輸入新任務名稱（必填）" />
+            </div>
+            <input type="text" id="newTaskDesc" placeholder="關卡文字說明（點選建築時會顯示，留空自動產生）" />
+            <div class="form-row-3">
+              <select id="newTaskStars">
+                <option value="1">獎勵 1 ⭐</option>
+                <option value="2" selected>獎勵 2 ⭐</option>
+                <option value="3">獎勵 3 ⭐</option>
+                <option value="5">獎勵 5 ⭐</option>
+              </select>
+              <select id="newTaskMinutes">
+                <option value="0" selected>不需計時</option>
+                <option value="5">計時 5 分鐘</option>
+                <option value="10">計時 10 分鐘</option>
+                <option value="15">計時 15 分鐘</option>
+                <option value="20">計時 20 分鐘</option>
+                <option value="40">計時 40 分鐘</option>
+              </select>
+            </div>
+            <label class="check-row" id="newTaskCoreRow" style="display:none;">
+              <input type="checkbox" id="newTaskCore" />
+              <span>設為解鎖平板休閒時間的「核心必要條件」</span>
+            </label>
+            <button type="button" class="toy-btn toy-accent toy-block" onclick="addCustomTask()">＋ 加入地圖建築</button>
+          </div>
+
+          <div id="manageTaskList" style="margin-top:12px;"></div>
+
+          <hr style="border:none; border-top:1px solid #e2e8f0; margin:18px 0;" />
+
+          <div class="section-title" style="font-size:1.05rem;">💾 紀錄備份與還原（防沙盒遺失）</div>
+          <p class="task-desc" style="margin-bottom:10px;">
+            若在瀏覽器重整或換裝置時想保留紀錄，可按「複製備份碼」存在記事本，隨時貼上還原：
+          </p>
+          <div class="modal-row" style="margin-bottom:10px;">
+            <button type="button" class="toy-btn toy-gold toy-sm" onclick="exportBackupCode()">📋 複製備份碼</button>
+            <button type="button" class="toy-btn toy-soft toy-sm" onclick="importBackupCode()">📥 貼上還原碼</button>
+          </div>
+
+          <hr style="border:none; border-top:1px solid #e2e8f0; margin:18px 0;" />
+
+          <div class="modal-row">
+            <button type="button" class="toy-btn toy-soft toy-sm" onclick="restoreDefaultRoleData()">↺ 恢復預設清單</button>
+            <button type="button" class="toy-btn toy-danger toy-sm" onclick="backToRoleSelect()">🏠 回角色首頁</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <nav class="bottom-nav" id="bottomNav" style="display:none;">
+    <button type="button" class="nav-btn active" data-tab="tasks" onclick="switchTab('tasks', this)">
+      <span class="nav-ico">🗺️</span>
+      <span>導航地圖</span>
+    </button>
+    <button type="button" class="nav-btn" data-tab="pet" onclick="switchTab('pet', this)">
+      <span class="nav-ico">🌱</span>
+      <span>澆花養怪</span>
+    </button>
+    <button type="button" class="nav-btn" data-tab="rewards" onclick="switchTab('rewards', this)">
+      <span class="nav-ico">🎁</span>
+      <span>獎勵商店</span>
+    </button>
+    <button type="button" class="nav-btn" data-tab="ledger" onclick="switchTab('ledger', this)">
+      <span class="nav-ico">📒</span>
+      <span>星星存摺</span>
+    </button>
+    <button type="button" class="nav-btn" data-tab="settings" onclick="switchTab('settings', this)">
+      <span class="nav-ico">⚙️</span>
+      <span>家長設定</span>
+    </button>
+  </nav>
+
+  <div class="modal-backdrop" id="landmarkModal">
+    <div class="modal-card">
+      <div style="font-size:2.4rem;" id="landmarkModalEmoji">🏠</div>
+      <div style="font-size:0.85rem; font-weight:900; color:#64748b; margin-top:4px;" id="landmarkModalStep">第 1 建築</div>
+      <h3 style="margin:4px 0 6px; font-size:1.25rem;" id="landmarkModalTitle">關卡名稱</h3>
+      <span class="star-tag" id="landmarkModalStars">+2 ⭐</span>
+
+      <div class="landmark-info-box">
+        <div class="landmark-info-title">📝 關卡說明</div>
+        <div class="landmark-info-desc" id="landmarkModalDesc"></div>
+      </div>
+
+      <div class="modal-actions" id="landmarkModalActions"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="timerModal">
+    <div class="modal-card">
+      <div style="font-size:2rem;" id="timerEmoji">⏱️</div>
+      <h3 style="margin:6px 0 4px; font-size:1.3rem;" id="timerTitle">專心計時挑戰</h3>
+      <p style="margin:0; font-size:0.9rem; color:var(--muted);" id="timerDesc"></p>
+
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 210 210">
+          <circle class="ring-bg" cx="105" cy="105" r="88" />
+          <circle class="ring-progress" id="ringCircle" cx="105" cy="105" r="88" />
+        </svg>
+        <div class="ring-center">
+          <div class="timer-digits" id="timerDigits">05:00</div>
+          <div class="timer-label" id="timerStatus">準備開始</div>
+        </div>
+      </div>
+
+      <div class="modal-actions" id="timerModalActions">
+        <div class="modal-row">
+          <button type="button" class="toy-btn toy-primary" id="timerToggleBtn" onclick="toggleTimer()">▶ 開始</button>
+          <button type="button" class="toy-btn toy-soft" onclick="resetTimer()">↺ 重設</button>
+        </div>
+        <button type="button" class="toy-btn toy-done" id="timerCompleteBtn" onclick="completeFromTimer()">✅ 完成建築領星星</button>
+        <button type="button" class="toy-btn toy-soft toy-sm" onclick="closeTimerModal()">關閉視窗</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="installModal">
+    <div class="modal-card" style="text-align:left;">
+      <h3 style="margin:0 0 10px; font-size:1.25rem;">📲 加入主畫面小技巧</h3>
+      <p style="margin:0 0 10px; font-size:0.95rem; line-height:1.55;">
+        <strong>iPad / iPhone（Safari）：</strong><br />
+        點選上方或下方工具列的「分享」圖示 → 往下滑點選「<strong>加入主畫面</strong>」。
+      </p>
+      <p style="margin:0 0 16px; font-size:0.95rem; line-height:1.55;">
+        <strong>Android 平板（Chrome）：</strong><br />
+        點選右上角「⋮」選單 → 點選「<strong>加到主畫面</strong>」或「<strong>安裝應用程式</strong>」。
+      </p>
+      <button type="button" class="toy-btn toy-primary toy-block" onclick="closeInstallModal()">我知道了！</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = "kids_toy_task_adventure_garden_monster_v1";
+    const WINDOW_NAME_PREFIX = "KIDS_ADVENTURE_STATE::";
+    const RING_CIRCUMFERENCE = 2 * Math.PI * 88;
+    let activeLandmarkTaskId = null;
+    let walkerFocusIndex = 0;
+    let isStorageRestricted = false;
+
+    function getTodayStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+
+    function getYesterdayStrFromDateStr(dateStr) {
+      const parts = dateStr.split("-").map(Number);
+      const dt = new Date(parts[0], parts[1] - 1, parts[2] - 1);
+      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+    }
+
+    function getTaskDescription(task) {
+      if (task && task.desc && task.desc.trim()) {
+        return task.desc.trim();
+      }
+      const title = (task && task.title) || "這項關卡";
+      return `專心完成「${title}」，做到後就可以領取星星前往下一個建築囉！`;
+    }
+
+    function createDefaultRoleNurture() {
+      return {
+        plantWater: 0,
+        plantHarvested: 0,
+        monsterEmoji: "🔥",
+        monsterExp: 0
+      };
+    }
+
+    function createDefaultData() {
+      return {
+        lastDate: getTodayStr(),
+        currentRole: null,
+        currentTab: "tasks",
+        roles: {
+          kinder: {
+            name: "小恐龍探險家",
+            stars: 0,
+            tabletMinutes: 20,
+            streak: 0,
+            dailyHistory: [],
+            todayEarnedStars: 0,
+            nurture: createDefaultRoleNurture(),
+            tasks: [
+              { id: "k1", landmark: "🏠", landmarkName: "香香小屋", icon: "🪥", title: "早起刷牙洗臉", desc: "早上起床把臉洗香香、牙齒刷乾淨，準備出發！", stars: 1, minutes: 0, core: false, requiredPhoto: false, done: false },
+              { id: "k2", landmark: "🏠", landmarkName: "洗手餐桌屋", icon: "🧼", title: "回家洗手＆餐具放水槽", desc: "一進家門先用肥皂洗手，餐具拿到水槽放好。", stars: 1, minutes: 0, core: false, requiredPhoto: false, done: false },
+              { id: "k3", landmark: "🌳", landmarkName: "小樹整理公園", icon: "🧣", title: "更換手帕＆檢查物品", desc: "換乾淨手帕，檢查口罩數量與外套有沒有放好。", stars: 1, minutes: 0, core: false, requiredPhoto: false, done: false },
+              { id: "k4", landmark: "🏠", landmarkName: "玩具歸位屋", icon: "🧺", title: "自己的物品放回專屬位置", desc: "自己的東西放回專屬籃子或櫃子，不亂放。", stars: 1, minutes: 0, core: false, requiredPhoto: false, done: false },
+              { id: "k5", landmark: "🌳", landmarkName: "友善分享公園", icon: "🤝", title: "借別人的東西前先問一聲", desc: "想碰別人的物品先詢問並同意，不硬搶。", stars: 2, minutes: 0, core: false, requiredPhoto: false, done: false },
+              { id: "k6", landmark: "🌳", landmarkName: "清新生態公園", icon: "🧹", title: "環境小幫手：掃地＆清鸚鵡便便", desc: "掃地＋地上若有鸚鵡大便就鏟乾淨，讓家裡亮晶晶。", stars: 2, minutes: 10, core: false, requiredPhoto: false, done: false },
+              { id: "k7", landmark: "🏟️", landmarkName: "活力體育館", icon: "🏃", title: "開合跳挑戰（約300-500下）", desc: "跟著計時器一起跳，動動身體好健康！", stars: 2, minutes: 5, core: false, requiredPhoto: false, done: false },
+              { id: "k8", landmark: "🏟️", landmarkName: "泡泡體育館", icon: "🛁", title: "專心洗澡", desc: "在時間內把身體與頭髮洗乾淨。", stars: 2, minutes: 20, core: false, requiredPhoto: false, done: false },
+              { id: "k9", landmark: "🏠", landmarkName: "暖烘烘換衣屋", icon: "💨", title: "吹頭髮＋穿好衣服", desc: "把頭髮吹乾才不會著涼，穿好整齊的睡衣。", stars: 1, minutes: 10, core: false, requiredPhoto: false, done: false },
+              { id: "k10", landmark: "🏠", landmarkName: "晚安刷牙屋", icon: "🌙", title: "睡前刷牙洗臉", desc: "睡覺前再刷一次牙、洗洗臉。", stars: 1, minutes: 0, core: false, requiredPhoto: false, done: false },
+              { id: "k11", landmark: "🏠", landmarkName: "星星被褥屋", icon: "🛏️", title: "09:30 準備好被褥", desc: "09:30 前把自己的被褥鋪好準備睡覺。", stars: 1, minutes: 0, core: false, requiredPhoto: false, done: false }
+            ],
+            rewards: [
+              { id: "kr1", icon: "🎟️", title: "免做小家事券一張", desc: "免掃地或免清一次鸚鵡大便", cost: 10 },
+              { id: "kr2", icon: "🍱", title: "專屬點心/晚餐指定券", desc: "今天想吃的小點心或菜色由你指定", cost: 8 },
+              { id: "kr3", icon: "🎲", title: "陪玩桌遊/畫畫 20 分鐘", desc: "請大人陪你專心玩桌遊或畫畫", cost: 6 },
+              { id: "kr4", icon: "🎡", title: "遊樂園出遊券", desc: "累積滿 30 顆星，一起去遊樂園玩！", cost: 30 }
+            ],
+            tickets: [],
+            logs: []
+          },
+          elem: {
+            name: "博士貓隊長",
+            stars: 0,
+            tabletMinutes: 20,
+            streak: 0,
+            dailyHistory: [],
+            todayEarnedStars: 0,
+            nurture: createDefaultRoleNurture(),
+            tasks: [
+              { id: "e1", landmark: "🏠", landmarkName: "晨光出發屋", icon: "🪥", title: "早起刷牙洗臉", desc: "早上準時起床完成刷牙與洗臉。", stars: 1, minutes: 0, core: false, requiredPhoto: false, done: false },
+              { id: "e2", landmark: "🏫", landmarkName: "教室座位站", icon: "📸", title: "離開學校前拍自己座位照", desc: "【核心必要】離開學校前用手錶拍乾淨座位照（含地板與椅下），回家給大人看過再勾選。", stars: 2, minutes: 0, core: true, requiredPhoto: true, done: false },
+              { id: "e3", landmark: "🏠", landmarkName: "整理歸位屋", icon: "🎒", title: "洗手、餐具放水槽＆清空手作垃圾/材料", desc: "餐具放水槽，書包整理好並把帶回的手作紙屑/材料歸位。", stars: 2, minutes: 0, core: true, requiredPhoto: false, done: false },
+              { id: "e4", landmark: "🏫", landmarkName: "智慧自修站", icon: "📚", title: "完成作業＋複習課程及訂正", desc: "專心寫完學校作業，並完成複習與訂正。", stars: 3, minutes: 40, core: true, requiredPhoto: false, done: false },
+              { id: "e5", landmark: "🏫", landmarkName: "聯絡簿簽名站", icon: "✍️", title: "聯絡簿給家長簽名", desc: "主動把聯絡簿拿給大人簽名檢查。", stars: 1, minutes: 0, core: true, requiredPhoto: false, done: false },
+              { id: "e6", landmark: "🌳", landmarkName: "清潔打掃公園", icon: "🧹", title: "拖地機拖地＋清潔拖地機", desc: "完成拖地後，記得把拖地機清乾淨。", stars: 2, minutes: 15, core: true, requiredPhoto: false, done: false },
+              { id: "e7", landmark: "🌳", landmarkName: "鸚鵡鳥籠公園", icon: "🦜", title: "整理鸚鵡鳥籠（換飼料＋清水）", desc: "更換新鮮飼料與乾淨飲水。", stars: 2, minutes: 0, core: true, requiredPhoto: false, done: false },
+              { id: "e8", landmark: "🏟️", landmarkName: "活力體育館", icon: "🏃", title: "開合跳挑戰（約300-500下）", desc: "5 分鐘活力開合跳挑戰。", stars: 2, minutes: 5, core: false, requiredPhoto: false, done: false },
+              { id: "e9", landmark: "🏟️", landmarkName: "元氣體育館", icon: "🛁", title: "專心洗澡", desc: "20 分鐘內完成洗澡。", stars: 2, minutes: 20, core: false, requiredPhoto: false, done: false },
+              { id: "e10", landmark: "🏠", landmarkName: "清爽吹整屋", icon: "💨", title: "吹頭髮＋穿好衣服", desc: "10 分鐘內吹乾頭髮並穿好衣服。", stars: 1, minutes: 10, core: false, requiredPhoto: false, done: false },
+              { id: "e11", landmark: "🏠", landmarkName: "睡前刷洗屋", icon: "🌙", title: "睡前刷牙洗臉", desc: "睡前完成刷牙洗臉。", stars: 1, minutes: 0, core: false, requiredPhoto: false, done: false },
+              { id: "e12", landmark: "🏠", landmarkName: "好眠被褥屋", icon: "🛏️", title: "09:30 準備好被褥", desc: "09:30 前準備好被褥。", stars: 1, minutes: 0, core: false, requiredPhoto: false, done: false }
+            ],
+            rewards: [
+              { id: "er1", icon: "🎟️", title: "免做家事券一張", desc: "任選一項日常家事今天免做一次", cost: 15 },
+              { id: "er2", icon: "📱", title: "額外平板休閒時間 20 分鐘", desc: "在約定時間內享受額外平板時光", cost: 8 },
+              { id: "er3", icon: "🍦", title: "週末冰淇淋獎勵", desc: "兌換一份喜歡的冰淇淋", cost: 10 },
+              { id: "er4", icon: "🎡", title: "遊樂園出遊券", desc: "累積滿 30 顆星，一起去遊樂園玩！", cost: 30 }
+            ],
+            tickets: [],
+            logs: []
+          }
+        }
+      };
+    }
+
+    function inferLandmark(task) {
+      if (task.landmark) return task.landmark;
+      const text = `${task.title || ""} ${task.icon || ""}`;
+      if (text.includes("跳") || text.includes("洗澡") || text.includes("體") || text.includes("🏃") || text.includes("🛁")) {
+        return "🏟️";
+      }
+      if (text.includes("掃") || text.includes("拖") || text.includes("鳥") || text.includes("鸚鵡") || text.includes("手帕") || text.includes("借") || text.includes("🌳") || text.includes("🧹") || text.includes("🦜")) {
+        return "🌳";
+      }
+      if (text.includes("座位") || text.includes("作業") || text.includes("聯絡簿") || text.includes("🏫") || text.includes("📚")) {
+        return "🏫";
+      }
+      return "🏠";
+    }
+
+    function settleDayIfNeeded(data, targetTodayStr) {
+      if (!data.lastDate) {
+        data.lastDate = targetTodayStr;
+        return false;
+      }
+      if (data.lastDate === targetTodayStr) {
+        return false;
+      }
+
+      const prevDate = data.lastDate;
+      const expectedPrevOfToday = getYesterdayStrFromDateStr(targetTodayStr);
+      const isConsecutiveDay = prevDate === expectedPrevOfToday;
+
+      ["kinder", "elem"].forEach(rKey => {
+        const role = data.roles[rKey];
+        if (!role) return;
+        const tasks = role.tasks || [];
+        const totalTasks = tasks.length;
+        const doneTasks = tasks.filter(t => t.done).length;
+        const earned = role.todayEarnedStars || 0;
+
+        role.dailyHistory = role.dailyHistory || [];
+        if (doneTasks > 0 || earned > 0) {
+          role.dailyHistory.unshift({
+            date: prevDate,
+            doneCount: doneTasks,
+            totalCount: totalTasks,
+            earnedStars: earned,
+            allPassed: totalTasks > 0 && doneTasks === totalTasks
+          });
+          if (role.dailyHistory.length > 30) role.dailyHistory.length = 30;
+        }
+
+        if (doneTasks > 0) {
+          role.streak = isConsecutiveDay ? ((role.streak || 0) + 1) : 1;
+        } else {
+          role.streak = 0;
+        }
+
+        role.todayEarnedStars = 0;
+        role.tasks = tasks.map(t => ({ ...t, done: false }));
+      });
+
+      data.lastDate = targetTodayStr;
+      walkerFocusIndex = 0;
+      return true;
+    }
+
+    function normalizeLoadedData(parsed) {
+      const fresh = createDefaultData();
+      const data = {
+        ...fresh,
+        ...parsed,
+        roles: {
+          kinder: {
+            ...fresh.roles.kinder,
+            ...(parsed.roles && parsed.roles.kinder ? parsed.roles.kinder : {}),
+            nurture: {
+              ...createDefaultRoleNurture(),
+              ...(parsed.roles && parsed.roles.kinder && parsed.roles.kinder.nurture ? parsed.roles.kinder.nurture : {})
+            }
+          },
+          elem: {
+            ...fresh.roles.elem,
+            ...(parsed.roles && parsed.roles.elem ? parsed.roles.elem : {}),
+            nurture: {
+              ...createDefaultRoleNurture(),
+              ...(parsed.roles && parsed.roles.elem && parsed.roles.elem.nurture ? parsed.roles.elem.nurture : {})
+            }
+          }
+        }
+      };
+      settleDayIfNeeded(data, getTodayStr());
+      return data;
+    }
+
+    function readRawStateString() {
+      try {
+        const lsVal = localStorage.getItem(STORAGE_KEY);
+        if (lsVal) return lsVal;
+      } catch {
+        isStorageRestricted = true;
+      }
+      try {
+        if (typeof window.name === "string" && window.name.startsWith(WINDOW_NAME_PREFIX)) {
+          return window.name.slice(WINDOW_NAME_PREFIX.length);
+        }
+      } catch {}
+      return null;
+    }
+
+    function loadData() {
+      try {
+        const raw = readRawStateString();
+        if (!raw) return createDefaultData();
+        return normalizeLoadedData(JSON.parse(raw));
+      } catch {
+        return createDefaultData();
+      }
+    }
+
+    let appData = loadData();
+
+    function saveData() {
+      const serialized = JSON.stringify(appData);
+      let lsOk = false;
+      try {
+        localStorage.setItem(STORAGE_KEY, serialized);
+        const check = localStorage.getItem(STORAGE_KEY);
+        if (check === serialized) lsOk = true;
+      } catch {
+        lsOk = false;
+      }
+      isStorageRestricted = !lsOk;
+
+      try {
+        window.name = WINDOW_NAME_PREFIX + serialized;
+      } catch {}
+    }
+
+    saveData();
+
+    function checkMidnightRollover(notifyIfChanged = true) {
+      const nowToday = getTodayStr();
+      const changed = settleDayIfNeeded(appData, nowToday);
+      if (changed) {
+        saveData();
+        renderAll();
+        if (notifyIfChanged) {
+          showToast("🌅 已過午夜 12 點！每日通關已結算，今日關卡已自動刷新！");
+        }
+      }
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => el.classList.remove("show"), 2800);
+    }
+
+    function playTone() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.14, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.36);
+      } catch {}
+    }
+
+    function animateNurtureElement(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove("pop");
+      void el.offsetWidth;
+      el.classList.add("pop");
+    }
+
+    function getPlantStageInfo(waterCount) {
+      if (waterCount >= 10) return { emoji: "🌻", label: "盛開大花階段" };
+      if (waterCount >= 6) return { emoji: "🌷", label: "含苞花苞階段" };
+      if (waterCount >= 3) return { emoji: "🌿", label: "嫩綠小芽階段" };
+      return { emoji: "🌱", label: "小種子階段" };
+    }
+
+    function getMonsterLevelInfo(exp) {
+      if (exp >= 25) return { lv: 3, title: "冒險大怪獸" };
+      if (exp >= 10) return { lv: 2, title: "活力小怪獸" };
+      return { lv: 1, title: "怪獸寶寶" };
+    }
+
+    function buyWateringAndGrow() {
+      checkMidnightRollover(false);
+      const rKey = appData.currentRole;
+      if (!rKey) return;
+      const role = appData.roles[rKey];
+      const cost = 3;
+      const nurture = role.nurture || (role.nurture = createDefaultRoleNurture());
+
+      if ((nurture.plantWater || 0) >= 10) {
+        harvestFlower();
+        return;
+      }
+
+      if (role.stars < cost) {
+        showToast(`還差 ${cost - role.stars} 顆星才能買澆水器澆花喔！`);
+        return;
+      }
+
+      role.stars -= cost;
+      nurture.plantWater = (nurture.plantWater || 0) + 1;
+      const stage = getPlantStageInfo(nurture.plantWater);
+      addLog(role, `買澆水器澆花（${stage.emoji} ${nurture.plantWater}/10）`, -cost);
+      playTone();
+      saveData();
+      renderMainScreen();
+      renderHomeStats();
+      animateNurtureElement("plantDisplay");
+      showToast(`🚿 澆水成功！花朵目前是「${stage.label}」`);
+    }
+
+    function harvestFlower() {
+      checkMidnightRollover(false);
+      const rKey = appData.currentRole;
+      if (!rKey) return;
+      const role = appData.roles[rKey];
+      const nurture = role.nurture || (role.nurture = createDefaultRoleNurture());
+      if ((nurture.plantWater || 0) < 10) return;
+
+      nurture.plantHarvested = (nurture.plantHarvested || 0) + 1;
+      nurture.plantWater = 0;
+      addLog(role, `收成盛開花朵 🌻（累計 ${nurture.plantHarvested} 朵）`, 0);
+      playTone();
+      saveData();
+      renderMainScreen();
+      animateNurtureElement("plantDisplay");
+      showToast(`🌻 太棒了！收成第 ${nurture.plantHarvested} 朵花，又種下新種子囉！`);
+    }
+
+    function selectMonsterType(emoji) {
+      const rKey = appData.currentRole;
+      if (!rKey) return;
+      const role = appData.roles[rKey];
+      const nurture = role.nurture || (role.nurture = createDefaultRoleNurture());
+      nurture.monsterEmoji = emoji;
+      saveData();
+      renderMainScreen();
+      animateNurtureElement("monsterAvatarBtn");
+    }
+
+    function feedMonster() {
+      checkMidnightRollover(false);
+      const rKey = appData.currentRole;
+      if (!rKey) return;
+      const role = appData.roles[rKey];
+      const cost = 4;
+      if (role.stars < cost) {
+        showToast(`還差 ${cost - role.stars} 顆星才能買營養餐餵怪獸喔！`);
+        return;
+      }
+      const nurture = role.nurture || (role.nurture = createDefaultRoleNurture());
+      const prevLv = getMonsterLevelInfo(nurture.monsterExp || 0).lv;
+      role.stars -= cost;
+      nurture.monsterExp = (nurture.monsterExp || 0) + 3;
+      const nowLvInfo = getMonsterLevelInfo(nurture.monsterExp);
+
+      addLog(role, `餵怪獸營養餐 ${nurture.monsterEmoji || "🔥"}（+3 成長）`, -cost);
+      playTone();
+      saveData();
+      renderMainScreen();
+      renderHomeStats();
+      animateNurtureElement("monsterAvatarBtn");
+      if (nowLvInfo.lv > prevLv) {
+        showToast(`🎉 怪獸進化到 Lv.${nowLvInfo.lv} ${nowLvInfo.title} 囉！`);
+      } else {
+        showToast(`🍖 怪獸吃得好開心！成長值 +3`);
+      }
+    }
+
+    function playWithMonster() {
+      checkMidnightRollover(false);
+      const rKey = appData.currentRole;
+      if (!rKey) return;
+      const role = appData.roles[rKey];
+      const cost = 2;
+      if (role.stars < cost) {
+        showToast(`還差 ${cost - role.stars} 顆星才能陪怪獸玩喔！`);
+        return;
+      }
+      const nurture = role.nurture || (role.nurture = createDefaultRoleNurture());
+      const prevLv = getMonsterLevelInfo(nurture.monsterExp || 0).lv;
+      role.stars -= cost;
+      nurture.monsterExp = (nurture.monsterExp || 0) + 2;
+      const nowLvInfo = getMonsterLevelInfo(nurture.monsterExp);
+
+      addLog(role, `陪怪獸玩耍 ${nurture.monsterEmoji || "🔥"}（+2 成長）`, -cost);
+      playTone();
+      saveData();
+      renderMainScreen();
+      renderHomeStats();
+      animateNurtureElement("monsterAvatarBtn");
+      if (nowLvInfo.lv > prevLv) {
+        showToast(`🎉 怪獸進化到 Lv.${nowLvInfo.lv} ${nowLvInfo.title} 囉！`);
+      } else {
+        showToast(`🎾 跟怪獸玩得好開心！成長值 +2`);
+      }
+    }
+
+    function applyTheme(roleKey) {
+      document.body.classList.remove("theme-kinder", "theme-elem");
+      if (roleKey === "kinder") document.body.classList.add("theme-kinder");
+      if (roleKey === "elem") document.body.classList.add("theme-elem");
+    }
+
+    function getRoleWalkerEmoji(roleKey) {
+      return roleKey === "kinder" ? "🦖" : "🐱";
+    }
+
+    function getAvatarSvg(roleKey) {
+      if (roleKey === "kinder") {
+        return `<svg viewBox="0 0 120 120" width="44" height="44" aria-hidden="true">
+          <path d="M26 78 C20 72, 22 60, 32 62 C36 63, 38 72, 42 74 L46 46 C47 34, 57 26, 70 26 C82 26, 90 34, 90 44 C90 52, 83 56, 76 56 L74 78 L80 96 L68 96 L65 82 L54 82 L51 96 L39 96 L42 78 Z" fill="#22c55e" stroke="#15803d" stroke-width="4" stroke-linejoin="round" />
+          <path d="M52 24 L57 14 L62 24 Z" fill="#facc15" stroke="#ca8a04" stroke-width="2.5" />
+          <circle cx="78" cy="38" r="4.5" fill="#fff" />
+          <circle cx="79.5" cy="38" r="2.3" fill="#1e293b" />
+        </svg>`;
+      }
+      return `<svg viewBox="0 0 120 120" width="44" height="44" aria-hidden="true">
+        <path d="M30 48 L24 22 L48 36 Z" fill="#fb923c" stroke="#c2410c" stroke-width="4" stroke-linejoin="round" />
+        <path d="M90 48 L96 22 L72 36 Z" fill="#fb923c" stroke="#c2410c" stroke-width="4" stroke-linejoin="round" />
+        <ellipse cx="60" cy="64" rx="35" ry="28" fill="#fb923c" stroke="#c2410c" stroke-width="4" />
+        <circle cx="48" cy="60" r="4.5" fill="#1e293b" />
+        <circle cx="72" cy="60" r="4.5" fill="#1e293b" />
+        <polygon points="60,66 55,71 65,71" fill="#f43f5e" />
+      </svg>`;
+    }
+
+    function selectRole(roleKey) {
+      checkMidnightRollover(false);
+      appData.currentRole = roleKey;
+      appData.currentTab = "tasks";
+      walkerFocusIndex = getCurrentStationIndex(appData.roles[roleKey].tasks);
+      saveData();
+      renderAll();
+    }
+
+    function backToRoleSelect() {
+      pauseTimer();
+      closeLandmarkModal();
+      appData.currentRole = null;
+      saveData();
+      renderAll();
+    }
+
+    function switchTab(tabName, btnEl) {
+      checkMidnightRollover(true);
+      appData.currentTab = tabName;
+      saveData();
+      document.querySelectorAll(".tab-page").forEach(p => p.classList.remove("active"));
+      const targetPage = document.getElementById(`page-${tabName}`);
+      if (targetPage) targetPage.classList.add("active");
+
+      document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+      if (btnEl) {
+        btnEl.classList.add("active");
+      } else {
+        const matched = document.querySelector(`.nav-btn[data-tab="${tabName}"]`);
+        if (matched) matched.classList.add("active");
+      }
+    }
+
+    function addLog(roleObj, text, delta) {
+      roleObj.logs = roleObj.logs || [];
+      const now = new Date();
+      const timeStr = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      roleObj.logs.unshift({
+        id: Date.now() + Math.random(),
+        text,
+        delta,
+        time: timeStr
+      });
+      if (roleObj.logs.length > 40) roleObj.logs.length = 40;
+    }
+
+    function isElemUnlocked(role) {
+      const coreTasks = role.tasks.filter(t => t.core);
+      if (coreTasks.length === 0) return false;
+      const allCoreDone = coreTasks.every(t => t.done);
+      const photoTasks = coreTasks.filter(t => t.requiredPhoto);
+      const photoDone = photoTasks.every(t => t.done);
+      return allCoreDone && photoDone;
+    }
+
+    function getCurrentStationIndex(tasks) {
+      if (!tasks || tasks.length === 0) return 0;
+      const firstUndone = tasks.findIndex(t => !t.done);
+      return firstUndone === -1 ? tasks.length : firstUndone;
+    }
+
+    function getNavWaypoints(count) {
+      const pts = [{ x: 12, y: 14 }];
+      if (count <= 0) {
+        pts.push({ x: 88, y: 86 });
+        return pts;
+      }
+      const cols = 3;
+      const rows = Math.ceil(count / cols);
+      for (let i = 0; i < count; i++) {
+        const r = Math.floor(i / cols);
+        const posInRow = i % cols;
+        const c = r % 2 === 0 ? posInRow : (cols - 1 - posInRow);
+        const x = 22 + c * 28;
+        const y = rows === 1 ? 50 : (22 + r * (60 / Math.max(1, rows - 1)));
+        pts.push({ x, y });
+      }
+      pts.push({ x: 88, y: 88 });
+      return pts;
+    }
+
+    function triggerWalkerWalkAnimation() {
+      const pin = document.getElementById("walkerPin");
+      if (!pin) return;
+      pin.classList.add("walking");
+      clearTimeout(triggerWalkerWalkAnimation._t);
+      triggerWalkerWalkAnimation._t = setTimeout(() => {
+        pin.classList.remove("walking");
+      }, 950);
+    }
+
+    function openLandmarkModal(taskId) {
+      checkMidnightRollover(false);
+      const rKey = appData.currentRole;
+      if (!rKey) return;
+      const role = appData.roles[rKey];
+      const idx = role.tasks.findIndex(t => t.id === taskId);
+      if (idx === -1) return;
+      const task = role.tasks[idx];
+      const landmarkEmoji = inferLandmark(task);
+      const descText = getTaskDescription(task);
+
+      walkerFocusIndex = idx + 1;
+      triggerWalkerWalkAnimation();
+      renderNavMapOnly(role, rKey);
+
+      activeLandmarkTaskId = task.id;
+      document.getElementById("landmarkModalEmoji").textContent = landmarkEmoji;
+      document.getElementById("landmarkModalStep").textContent = `第 ${idx + 1} 建築 · ${task.landmarkName || "關卡地標"}`;
+      document.getElementById("landmarkModalTitle").textContent = task.title;
+      document.getElementById("landmarkModalStars").textContent = `+${task.stars} ⭐`;
+
+      let extraNote = "";
+      if (task.requiredPhoto && rKey === "elem") {
+        extraNote = "<br/><strong>📌 解鎖條件：</strong>離開學校前拍自己座位照並給大人看過，才能解鎖終點平板時間。";
+      } else if (task.minutes) {
+        extraNote = `<br/><strong>⏱️ 建議計時：</strong>${task.minutes} 分鐘`;
+      }
+
+      if (task.done) {
+        extraNote += "<br/><strong>🔒 已領星鎖定：</strong>此關卡已領星，孩子無法更動；需由家長在「⚙️ 家長設定」調整。";
+      }
+
+      document.getElementById("landmarkModalDesc").innerHTML = `${descText}${extraNote}`;
+
+      const actionsEl = document.getElementById("landmarkModalActions");
+      const timerBtnHtml = task.minutes
+        ? `<button type="button" class="toy-btn toy-accent toy-block" onclick="openTimerFromLandmark('${task.id}')">⏱️ 開始計時 ${task.minutes} 分鐘</button>`
+        : "";
+      const toggleBtnHtml = task.done
+        ? `<button type="button" class="toy-btn toy-soft toy-block" disabled>🔒 已領星（需家長才能更動）</button>`
+        : `<button type="button" class="toy-btn toy-primary toy-block" onclick="toggleTaskFromLandmark('${task.id}')">⭐ 完成建築領 +${task.stars} 星</button>`;
+
+      actionsEl.innerHTML = `
+        ${timerBtnHtml}
+        ${toggleBtnHtml}
+        <button type="button" class="toy-btn toy-soft toy-sm" onclick="closeLandmarkModal()">關閉視窗</button>
+      `;
+
+      document.getElementById("landmarkModal").classList.add("open");
+    }
+
+    function closeLandmarkModal() {
+      activeLandmarkTaskId = null;
+      document.getElementById("landmarkModal").classList.remove("open");
+    }
+
+    function toggleTaskFromLandmark(taskId) {
+      closeLandmarkModal();
+      toggleTask(taskId);
+    }
+
+    function openTimerFromLandmark(taskId) {
+      closeLandmarkModal();
+      openTimerForTask(taskId);
+    }
+
+    function toggleTask(taskId, isParentOverride = false) {
+      checkMidnightRollover(false);
+      const rKey = appData.currentRole;
+      if (!rKey) return;
+      const role = appData.roles[rKey];
+      const idx = role.tasks.findIndex(t => t.id === taskId);
+      if (idx === -1) return;
+      const task = role.tasks[idx];
+      const walker = getRoleWalkerEmoji(rKey);
+      const landmark = inferLandmark(task);
+
+      if (task.done && !isParentOverride) {
+        showToast("🔒 已領星關卡已鎖定，需由家長在「家長設定」更動");
+        return;
+      }
+
+      const wasUnlocked = rKey === "elem" && isElemUnlocked(role);
+
+      if (!task.done) {
+        task.done = true;
+        role.stars += task.stars;
+        role.todayEarnedStars = (role.todayEarnedStars || 0) + task.stars;
+        addLog(role, `${walker} 通過${landmark}第 ${idx + 1} 建築領星：${task.title}`, task.stars);
+        playTone();
+
+        const nextIdx = getCurrentStationIndex(role.tasks);
+        walkerFocusIndex = nextIdx;
+        triggerWalkerWalkAnimation();
+
+        if (nextIdx >= role.tasks.length) {
+          showToast(`${walker} 導航走到終點站囉！+${task.stars} ⭐`);
+        } else {
+          const nextLandmark = inferLandmark(role.tasks[nextIdx]);
+          showToast(`${walker} 領取 +${task.stars} ⭐，正走向 ${nextLandmark} 第 ${nextIdx + 1} 建築！`);
+        }
+      } else {
+        task.done = false;
+        role.stars = Math.max(0, role.stars - task.stars);
+        role.todayEarnedStars = Math.max(0, (role.todayEarnedStars || 0) - task.stars);
+        addLog(role, `家長退回${landmark}第 ${idx + 1} 建築星星：${task.title}`, -task.stars);
+        walkerFocusIndex = getCurrentStationIndex(role.tasks);
+        triggerWalkerWalkAnimation();
+        showToast(`🔓 家長已取消「${task.title}」完成狀態並退回 ${task.stars} ⭐`);
+      }
+
+      const nowUnlocked = rKey === "elem" && isElemUnlocked(role);
+      if (!wasUnlocked && nowUnlocked) {
+        showToast(`🔓 核心必要條件全達成！終點平板時間已解鎖`);
+      }
+
+      saveData();
+      renderMainScreen();
+      renderHomeStats();
+    }
+
+    function resetCurrentRoleTasks() {
+      checkMidnightRollover(false);
+      const rKey = appData.currentRole;
+      if (!rKey) return;
+      const role = appData.roles[rKey];
+      const unlockedCount = role.tasks.filter(t => !t.done).length;
+      if (unlockedCount === 0) {
+        showToast("🔒 今天的關卡都已領星鎖定，需由家長在「家長設定」調整");
+        return;
+      }
+      walkerFocusIndex = getCurrentStationIndex(role.tasks);
+      triggerWalkerWalkAnimation();
+      showToast("🔒 已領星的關卡已鎖定，需退回星星請到「家長設定」");
+      renderMainScreen();
+    }
+
+    function redeemReward(rewardId) {
+      checkMidnightRollover(false);
+      const rKey = appData.currentRole;
+      if (!rKey) return;
+      const role = appData.roles[rKey];
+      const reward = role.rewards.find(r => r.id === rewardId);
+      if (!reward) return;
+
+      if (role.stars < reward.cost) {
+        showToast(`還差 ${reward.cost - role.stars} 顆星就能兌換囉！`);
+        return;
+      }
+
+      role.stars -= reward.cost;
+      role.tickets = role.tickets || [];
+      role.tickets.unshift({
+        id: "t_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+        icon: reward.icon,
+        title: reward.title,
+        desc: reward.desc,
+        createdAt: new Date().toLocaleDateString("zh-TW")
+      });
+      addLog(role, `兌換獎勵券：${reward.title}`, -reward.cost);
+      playTone();
+      saveData();
+      renderMainScreen();
+      renderHomeStats();
+      showToast(`🎉 兌換成功！「${reward.title}」已放進票券夾`);
+    }
+
+    function useTicket(ticketId) {
+      const rKey = appData.currentRole;
+      if (!rKey) return;
+      const role = appData.roles[rKey];
+      const idx = (role.tickets || []).findIndex(t => t.id === ticketId);
+      if (idx === -1) return;
+      const used = role.tickets[idx];
+      if (!confirm(`確定要核銷使用「${used.title}」嗎？`)) return;
+      role.tickets.splice(idx, 1);
+      addLog(role, `已核銷使用票券：${used.title}`, 0);
+      saveData();
+      renderMainScreen();
+      showToast(`✨ 已核銷「${used.title}」！`);
+    }
+
+    function saveRoleName() {
+      const rKey = appData.currentRole;
+      if (!rKey) return;
+      const val = document.getElementById("editRoleNameInput").value.trim();
+      if (!val) {
+        showToast("請輸入暱稱喔！");
+        return;
+      }
+      appData.roles[rKey].name = val;
+      saveData();
+      renderAll();
+      showToast("角色名稱已更新！");
+    }
+
+    function saveTabletMinutes() {
+      const rKey = appData.currentRole;
+      if (rKey !== "elem") return;
+      const mins = parseInt(document.getElementById("tabletMinutesSelect").value, 10) || 20;
+      appData.roles.elem.tabletMinutes = mins;
+      saveData();
+      renderMainScreen();
+      showToast(`已設定解鎖平板休閒時間為 ${mins} 分鐘`);
+    }
+
+    function adjustStars(delta) {
+      const rKey = appData.currentRole;
+      if (!rKey) return;
+      const role = appData.roles[rKey];
+      role.stars = Math.max(0, role.stars + delta);
+      addLog(role, `家長調整星星`, delta);
+      saveData();
+      renderMainScreen();
+      renderHomeStats();
+      showToast(`星星已更新為 ${role.stars} ⭐`);
+    }
+
+    function addCustomTask() {
+      const rKey = appData.currentRole;
+      if (!rKey) {
+        showToast("請先選擇角色再新增任務！");
+        return;
+      }
+      const landmarkEl = document.getElementById("newTaskIcon");
+      const titleEl = document.getElementById("newTaskTitle");
+      const descEl = document.getElementById("newTaskDesc");
+      const starsEl = document.getElementById("newTaskStars");
+      const minsEl = document.getElementById("newTaskMinutes");
+      const coreEl = document.getElementById("newTaskCore");
+
+      const landmark = (landmarkEl && landmarkEl.value) ? landmarkEl.value : "🏠";
+      const title = titleEl ? titleEl.value.trim() : "";
+      const rawDesc = descEl ? descEl.value.trim() : "";
+      const stars = starsEl ? (parseInt(starsEl.value, 10) || 1) : 1;
+      const minutes = minsEl ? (parseInt(minsEl.value, 10) || 0) : 0;
+      const core = rKey === "elem" && coreEl && coreEl.checked;
+
+      if (!title) {
+        showToast("⚠️ 請先輸入「新任務名稱」再按加入！");
+        if (titleEl) titleEl.focus();
+        return;
+      }
+
+      const desc = rawDesc || `專心完成「${title}」，做到後就可以領取星星前往下一個建築囉！`;
+      const newTask = {
+        id: "custom_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+        landmark,
+        landmarkName: "自訂建築",
+        icon: landmark,
+        title,
+        desc,
+        stars,
+        minutes,
+        core,
+        requiredPhoto: false,
+        done: false
+      };
+
+      appData.roles[rKey].tasks.push(newTask);
+
+      if (titleEl) titleEl.value = "";
+      if (descEl) descEl.value = "";
+      if (coreEl) coreEl.checked = false;
+
+      walkerFocusIndex = getCurrentStationIndex(appData.roles[rKey].tasks);
+      saveData();
+      renderMainScreen();
+      renderHomeStats();
+      showToast(`✅ 已成功新增第 ${appData.roles[rKey].tasks.length} 建築：「${title}」`);
+    }
+
+    function deleteTask(taskId) {
+      const rKey = appData.currentRole;
+      if (!rKey) return;
+      const role = appData.roles[rKey];
+      const target = role.tasks.find(t => t.id === taskId);
+      if (target && target.done) {
+        showToast("🔒 此關卡已領星鎖定，請先在「已領星關卡管理」退回星星後再刪除");
+        return;
+      }
+      role.tasks = role.tasks.filter(t => t.id !== taskId);
+      walkerFocusIndex = getCurrentStationIndex(role.tasks);
+      saveData();
+      renderMainScreen();
+      renderHomeStats();
+      showToast("已移除該地圖建築");
+    }
+
+    function exportBackupCode() {
+      try {
+        const code = btoa(unescape(encodeURIComponent(JSON.stringify(appData))));
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(() => {
+            showToast("📋 已複製紀錄備份碼！請貼到記事本保存");
+          }).catch(() => {
+            prompt("請全選複製以下紀錄備份碼：", code);
+          });
+        } else {
+          prompt("請全選複製以下紀錄備份碼：", code);
+        }
+      } catch {
+        showToast("產生備份碼失敗");
+      }
+    }
+
+    function importBackupCode() {
+      const code = prompt("請貼上先前複製的紀錄備份碼：");
+      if (!code || !code.trim()) return;
+      try {
+        const jsonStr = decodeURIComponent(escape(atob(code.trim())));
+        const parsed = JSON.parse(jsonStr);
+        appData = normalizeLoadedData(parsed);
+        saveData();
+        renderAll();
+        showToast("🎉 已成功還原所有星星與自訂任務紀錄！");
+      } catch {
+        showToast("⚠️ 備份碼格式不正確，請確認有完整複製");
+      }
+    }
+
+    function restoreDefaultRoleData() {
+      const rKey = appData.currentRole;
+      if (!rKey) return;
+      if (!confirm("確定要將此角色的導航建築與獎勵恢復成預設清單嗎？")) return;
+      const fresh = createDefaultData().roles[rKey];
+      const keepStars = appData.roles[rKey].stars;
+      const keepTickets = appData.roles[rKey].tickets || [];
+      const keepLogs = appData.roles[rKey].logs || [];
+      const keepStreak = appData.roles[rKey].streak || 0;
+      const keepHistory = appData.roles[rKey].dailyHistory || [];
+      const keepEarned = appData.roles[rKey].todayEarnedStars || 0;
+      const keepNurture = appData.roles[rKey].nurture || createDefaultRoleNurture();
+      appData.roles[rKey] = {
+        ...fresh,
+        stars: keepStars,
+        tickets: keepTickets,
+        logs: keepLogs,
+        streak: keepStreak,
+        dailyHistory: keepHistory,
+        todayEarnedStars: keepEarned,
+        nurture: keepNurture
+      };
+      walkerFocusIndex = getCurrentStationIndex(appData.roles[rKey].tasks);
+      saveData();
+      renderMainScreen();
+      renderHomeStats();
+      showToast("已恢復預設導航建築與獎勵清單！");
+    }
+
+    let timerState = {
+      taskId: null,
+      isLeisure: false,
+      totalSec: 300,
+      remainSec: 300,
+      running: false,
+      intervalId: null
+    };
+
+    const ringCircle = document.getElementById("ringCircle");
+    ringCircle.style.strokeDasharray = RING_CIRCUMFERENCE;
+
+    function updateRingVisual() {
+      const ratio = timerState.totalSec > 0 ? Math.max(0, timerState.remainSec / timerState.totalSec) : 0;
+      ringCircle.style.strokeDashoffset = RING_CIRCUMFERENCE * (1 - ratio);
+
+      ringCircle.classList.remove("warn", "urgent");
+      if (timerState.remainSec <= 30 && timerState.remainSec > 0) {
+        ringCircle.classList.add("urgent");
+      } else if (ratio <= 0.35 && timerState.remainSec > 0) {
+        ringCircle.classList.add("warn");
+      }
+
+      const mins = Math.floor(timerState.remainSec / 60);
+      const secs = timerState.remainSec % 60;
+      document.getElementById("timerDigits").textContent =
+        `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+
+    function openTimerForTask(taskId) {
+      const rKey = appData.currentRole;
+      if (!rKey) return;
+      const task = appData.roles[rKey].tasks.find(t => t.id === taskId);
+      if (!task || !task.minutes) return;
+
+      pauseTimer();
+      timerState.taskId = task.id;
+      timerState.isLeisure = false;
+      timerState.totalSec = task.minutes * 60;
+      timerState.remainSec = task.minutes * 60;
+      timerState.running = false;
+
+      document.getElementById("timerEmoji").textContent = task.icon;
+      document.getElementById("timerTitle").textContent = `${task.title}（${task.minutes} 分鐘）`;
+      document.getElementById("timerDesc").textContent = getTaskDescription(task);
+      document.getElementById("timerStatus").textContent = "準備開始";
+      document.getElementById("timerToggleBtn").textContent = "▶ 開始";
+      document.getElementById("timerCompleteBtn").style.display = task.done ? "none" : "inline-flex";
+      updateRingVisual();
+
+      document.getElementById("timerModal").classList.add("open");
+    }
+
+    function openTabletLeisureTimer() {
+      const role = appData.roles.elem;
+      if (!isElemUnlocked(role)) {
+        showToast("請先完成「離開學校前拍自己座位照」等核心必要條件喔！");
+        return;
+      }
+      const mins = role.tabletMinutes || 20;
+      pauseTimer();
+      timerState.taskId = null;
+      timerState.isLeisure = true;
+      timerState.totalSec = mins * 60;
+      timerState.remainSec = mins * 60;
+      timerState.running = false;
+
+      document.getElementById("timerEmoji").textContent = "📱";
+      document.getElementById("timerTitle").textContent = `終點站平板時間（${mins} 分鐘）`;
+      document.getElementById("timerDesc").textContent = "時間到響鈴時，請自己按暫停並把平板放回充電區喔！";
+      document.getElementById("timerStatus").textContent = "已解鎖，可開始計時";
+      document.getElementById("timerToggleBtn").textContent = "▶ 開始";
+      document.getElementById("timerCompleteBtn").style.display = "none";
+      updateRingVisual();
+
+      document.getElementById("timerModal").classList.add("open");
+    }
+
+    function toggleTimer() {
+      if (timerState.running) {
+        pauseTimer();
+      } else {
+        if (timerState.remainSec <= 0) {
+          timerState.remainSec = timerState.totalSec;
+        }
+        timerState.running = true;
+        document.getElementById("timerToggleBtn").textContent = "⏸ 暫停";
+        document.getElementById("timerStatus").textContent = timerState.isLeisure ? "平板休閒計時中" : "專心闖關中！";
+        timerState.intervalId = setInterval(() => {
+          if (timerState.remainSec > 0) {
+            timerState.remainSec -= 1;
+            updateRingVisual();
+            if (timerState.remainSec === 0) {
+              pauseTimer();
+              document.getElementById("timerStatus").textContent =
+                timerState.isLeisure ? "時間到！請把平板放回充電座" : "時間到！超棒的！";
+              playTone();
+              showToast(timerState.isLeisure ? "⏰ 平板時間到囉！記得放回充電區" : "⏰ 時間到！完成建築就可以領星星囉！");
+            }
+          }
+        }, 1000);
+      }
+    }
+
+    function pauseTimer() {
+      timerState.running = false;
+      if (timerState.intervalId) {
+        clearInterval(timerState.intervalId);
+        timerState.intervalId = null;
+      }
+      document.getElementById("timerToggleBtn").textContent = "▶ 開始";
+      if (timerState.remainSec > 0 && timerState.remainSec < timerState.totalSec) {
+        document.getElementById("timerStatus").textContent = "已暫停";
+      }
+    }
+
+    function resetTimer() {
+      pauseTimer();
+      timerState.remainSec = timerState.totalSec;
+      document.getElementById("timerStatus").textContent = "已重設";
+      updateRingVisual();
+    }
+
+    function completeFromTimer() {
+      const targetId = timerState.taskId;
+      closeTimerModal();
+      const rKey = appData.currentRole;
+      if (!rKey || !targetId) return;
+      const task = appData.roles[rKey].tasks.find(t => t.id === targetId);
+      if (task && !task.done) {
+        toggleTask(targetId);
+      }
+    }
+
+    function closeTimerModal() {
+      pauseTimer();
+      document.getElementById("timerModal").classList.remove("open");
+    }
+
+    function openInstallModal() {
+      document.getElementById("installModal").classList.add("open");
+    }
+
+    function closeInstallModal() {
+      document.getElementById("installModal").classList.remove("open");
+    }
+
+    function renderHomeStats() {
+      const k = appData.roles.kinder;
+      const e = appData.roles.elem;
+
+      document.getElementById("homeKinderName").textContent = k.name;
+      document.getElementById("homeKinderStats").textContent = `⭐ ${k.stars} 顆星 · 🔥 連 ${k.streak || 0} 天`;
+
+      document.getElementById("homeElemName").textContent = e.name;
+      document.getElementById("homeElemStats").textContent = `⭐ ${e.stars} 顆星 · 🔥 連 ${e.streak || 0} 天`;
+    }
+
+    function renderNavMapOnly(role, rKey) {
+      const waypoints = getNavWaypoints(role.tasks.length);
+      const startPt = waypoints[0];
+      const endPt = waypoints[waypoints.length - 1];
+
+      let pathD = `M ${startPt.x} ${startPt.y}`;
+      for (let i = 1; i < waypoints.length; i++) {
+        const prev = waypoints[i - 1];
+        const curr = waypoints[i];
+        const midX = (prev.x + curr.x) / 2;
+        pathD += ` Q ${midX} ${prev.y}, ${curr.x} ${curr.y}`;
+      }
+
+      document.getElementById("navSvgLayer").innerHTML = `
+        <path d="${pathD}" fill="none" stroke="#ffffff" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.92" />
+        <path d="${pathD}" fill="none" stroke="#4f8ef7" stroke-width="2.6" stroke-dasharray="2.8 2.4" stroke-linecap="round" stroke-linejoin="round" />
+      `;
+
+      document.getElementById("navEndpointsLayer").innerHTML = `
+        <div class="nav-endpoint start" style="left:${startPt.x}%; top:${startPt.y}%;">🚩 起點</div>
+        <div class="nav-endpoint finish" style="left:${endPt.x}%; top:${endPt.y}%;">🏁 終點</div>
+      `;
+
+      const currentIdx = getCurrentStationIndex(role.tasks);
+      const buildingsHtml = role.tasks.map((t, idx) => {
+        const pt = waypoints[idx + 1];
+        const landmark = inferLandmark(t);
+        const isCurrent = idx === currentIdx;
+        return `
+          <button type="button"
+            class="building-node ${t.done ? "done" : ""} ${isCurrent ? "active-target" : ""}"
+            style="left:${pt.x}%; top:${pt.y}%;"
+            onclick="openLandmarkModal('${t.id}')"
+            title="第 ${idx + 1} 建築">
+            ${t.done ? `<span class="building-lock-dot">🔒</span>` : ""}
+            <span class="building-emoji">${landmark}</span>
+            <span class="building-step">${idx + 1}</span>
+          </button>
+        `;
+      }).join("");
+
+      document.getElementById("navBuildingsLayer").innerHTML = buildingsHtml;
+
+      const clampedFocus = Math.max(0, Math.min(waypoints.length - 1, walkerFocusIndex));
+      const walkerPt = waypoints[clampedFocus];
+      const walkerPin = document.getElementById("walkerPin");
+      document.getElementById("walkerBubble").textContent = getRoleWalkerEmoji(rKey);
+      walkerPin.style.left = `${walkerPt.x}%`;
+      walkerPin.style.top = `${walkerPt.y}%`;
+    }
+
+    function renderMainScreen() {
+      const rKey = appData.currentRole;
+      const roleScreen = document.getElementById("roleScreen");
+      const mainScreen = document.getElementById("mainScreen");
+      const bottomNav = document.getElementById("bottomNav");
+
+      if (!rKey || !appData.roles[rKey]) {
+        applyTheme(null);
+        roleScreen.classList.remove("hidden");
+        mainScreen.classList.remove("active");
+        bottomNav.style.display = "none";
+        return;
+      }
+
+      applyTheme(rKey);
+      roleScreen.classList.add("hidden");
+      mainScreen.classList.add("active");
+      bottomNav.style.display = "grid";
+
+      const warnBar = document.getElementById("storageWarnBar");
+      if (warnBar) {
+        warnBar.style.display = isStorageRestricted ? "block" : "none";
+      }
+
+      const role = appData.roles[rKey];
+      const totalCount = role.tasks.length;
+      const doneCount = role.tasks.filter(t => t.done).length;
+      const walker = getRoleWalkerEmoji(rKey);
+      const currentIdx = getCurrentStationIndex(role.tasks);
+
+      if (walkerFocusIndex > role.tasks.length) {
+        walkerFocusIndex = currentIdx;
+      }
+
+      document.getElementById("activeAvatar").innerHTML = getAvatarSvg(rKey);
+      document.getElementById("activeName").textContent = role.name;
+      document.getElementById("activeRoleBadge").textContent =
+        rKey === "kinder" ? `🦖 大班 · 🔥 連 ${role.streak || 0} 天` : `🐱 國小 · 🔥 連 ${role.streak || 0} 天`;
+      document.getElementById("activeStars").textContent = role.stars;
+
+      document.getElementById("mapTitle").textContent =
+        rKey === "kinder" ? "🗺️ 小恐龍可愛導航地圖" : "🗺️ 貓咪隊長可愛導航地圖";
+      document.getElementById("mapProgressBadge").textContent = `已過 ${doneCount} / ${totalCount} 建築`;
+
+      if (totalCount === 0) {
+        document.getElementById("mapSubText").textContent = "目前還沒有建築地標，可到「家長設定」新增。";
+      } else if (currentIdx >= totalCount) {
+        document.getElementById("mapSubText").textContent = `${walker} 已沿路線走到終點站囉！`;
+      } else {
+        const curLandmark = inferLandmark(role.tasks[currentIdx]);
+        document.getElementById("mapSubText").textContent =
+          `${walker} 正在導航前往 ${curLandmark} 第 ${currentIdx + 1} 建築——點選建築即可看說明並領星！`;
+      }
+
+      renderNavMapOnly(role, rKey);
+
+      const goalBox = document.getElementById("goalHouseBox");
+      const mustPhotoAlert = document.getElementById("mustPhotoAlert");
+      const goalTitle = document.getElementById("goalHouseTitle");
+      const goalDesc = document.getElementById("goalHouseDesc");
+      const goalActionWrap = document.getElementById("goalHouseActionWrap");
+      const allDone = totalCount > 0 && doneCount === totalCount;
+
+      if (rKey === "elem") {
+        const coreTasks = role.tasks.filter(t => t.core);
+        const coreDone = coreTasks.filter(t => t.done).length;
+        const photoMissing = coreTasks.some(t => t.requiredPhoto && !t.done);
+        const unlocked = isElemUnlocked(role);
+        const mins = role.tabletMinutes || 20;
+
+        goalBox.classList.toggle("unlocked", unlocked);
+        mustPhotoAlert.style.display = (!unlocked && photoMissing) ? "block" : "none";
+
+        if (unlocked) {
+          goalTitle.textContent = `🏁 抵達終點站！平板休閒時間已解鎖（${mins} 分鐘）`;
+          goalDesc.textContent = "離開學校前拍自己座位照與核心建築都完成囉！可以啟動平板計時器。";
+          goalActionWrap.innerHTML =
+            `<button type="button" class="toy-btn toy-done toy-block" onclick="openTabletLeisureTimer()">📱 啟動平板休閒計時器（${mins} 分鐘）</button>`;
+        } else {
+          goalTitle.textContent = `🏁 終點站：平板休閒時間（${mins} 分鐘）`;
+          goalDesc.textContent =
+            `核心建築進度 ${coreDone}/${coreTasks.length}（需完成「離開學校前拍自己座位照」等核心任務才能解鎖）。`;
+          goalActionWrap.innerHTML = "";
+        }
+      } else {
+        goalBox.classList.toggle("unlocked", allDone);
+        mustPhotoAlert.style.display = "none";
+        goalTitle.textContent = allDone
+          ? "🏁 抵達終點站！今日導航全通關"
+          : "🏁 終點站：累積星星換獎勵";
+        goalDesc.textContent = allDone
+          ? "今天的建築全部走完囉！快去獎勵商店看看星星或「🎡 遊樂園出遊券」吧。"
+          : `目前已通過 ${doneCount}/${totalCount} 座建築，累積星星可到獎勵商店兌換券（滿 30 ⭐ 可換遊樂園出遊券）。`;
+        goalActionWrap.innerHTML = "";
+      }
+
+      const pct = totalCount === 0 ? 0 : Math.round((doneCount / totalCount) * 100);
+      document.getElementById("progressText").textContent = `${doneCount} / ${totalCount} 建築（${pct}%）`;
+      document.getElementById("progressFill").style.width = `${pct}%`;
+
+      document.getElementById("tasksSectionTitle").textContent =
+        rKey === "kinder" ? "🦖 恐龍建築關卡清單" : "🐱 貓咪建築關卡清單";
+
+      const taskListEl = document.getElementById("taskList");
+      if (role.tasks.length === 0) {
+        taskListEl.innerHTML = `<div class="panel-card" style="text-align:center; color:var(--muted);">目前還沒有地圖建築，可到「家長設定」新增或恢復預設清單。</div>`;
+      } else {
+        taskListEl.innerHTML = role.tasks.map((t, idx) => {
+          const landmark = inferLandmark(t);
+          const descText = getTaskDescription(t);
+          return `
+            <div class="task-card ${t.done ? "done" : ""}" id="task-card-${t.id}">
+              <div class="task-top">
+                <div class="task-icon">${landmark}</div>
+                <div class="task-info">
+                  <div class="task-title-row">
+                    <div class="task-title">第 ${idx + 1} 建築：${t.title}</div>
+                    <div class="badge-row">
+                      ${t.done ? `<span class="lock-badge">🔒 已領星鎖定</span>` : ""}
+                      ${t.requiredPhoto && rKey === "elem" ? `<span class="core-badge">核心必要</span>` : (t.core && rKey === "elem" ? `<span class="core-badge">解鎖核心</span>` : "")}
+                      <span class="star-tag">+${t.stars} ⭐</span>
+                    </div>
+                  </div>
+                  <div class="task-desc">${descText}${t.minutes ? ` · ⏱️ ${t.minutes} 分鐘` : ""}</div>
+                </div>
+              </div>
+              <div class="task-actions">
+                <button type="button" class="toy-btn toy-soft" onclick="openLandmarkModal('${t.id}')">📖 建築說明</button>
+                ${t.minutes ? `<button type="button" class="toy-btn toy-accent" onclick="openTimerForTask('${t.id}')">⏱️ 計時 ${t.minutes}分</button>` : ""}
+                <button type="button" class="toy-btn ${t.done ? "toy-done" : "toy-primary"}" ${t.done ? "disabled" : ""} onclick="toggleTask('${t.id}')">
+                  ${t.done ? "🔒 已領星（需家長更動）" : "完成建築！"}
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      const nurture = role.nurture || (role.nurture = createDefaultRoleNurture());
+      const pWater = nurture.plantWater || 0;
+      const pHarvested = nurture.plantHarvested || 0;
+      const pStage = getPlantStageInfo(pWater);
+      document.getElementById("harvestCountBadge").textContent = `🌻 已收成 ${pHarvested} 朵`;
+      document.getElementById("plantDisplay").textContent = pStage.emoji;
+      document.getElementById("plantStageName").textContent = pStage.label;
+      document.getElementById("plantGrowthText").textContent = `澆水 ${pWater} / 10 次即可盛開收成`;
+      document.getElementById("plantBarFill").style.width = `${Math.min(100, (pWater / 10) * 100)}%`;
+
+      const plantActionRow = document.getElementById("plantActionRow");
+      if (pWater >= 10) {
+        plantActionRow.innerHTML =
+          `<button type="button" class="toy-btn toy-done toy-block" onclick="harvestFlower()">🌻 花朵盛開囉！立即收成並種下新種子</button>`;
+      } else {
+        plantActionRow.innerHTML =
+          `<button type="button" class="toy-btn toy-accent toy-block" onclick="buyWateringAndGrow()">🚿 買澆水器澆花（花費 3 ⭐，+1 成長）</button>`;
+      }
+
+      const mEmoji = nurture.monsterEmoji || "🔥";
+      const mExp = nurture.monsterExp || 0;
+      const mLvInfo = getMonsterLevelInfo(mExp);
+      const monsterNameMap = { "🔥": "火龍怪獸", "👾": "紫晶怪獸", "🦄": "星星怪獸" };
+      document.getElementById("monsterLevelBadge").textContent = `Lv.${mLvInfo.lv} ${mLvInfo.title}`;
+      document.getElementById("monsterAvatarBtn").textContent = mEmoji;
+      document.getElementById("monsterTitleText").textContent = `${monsterNameMap[mEmoji] || "小怪獸"} · Lv.${mLvInfo.lv} ${mLvInfo.title}`;
+      document.getElementById("monsterExpText").textContent = `怪獸成長值 ${mExp}（Lv.1: 0~9 / Lv.2: 10~24 / Lv.3: 25+）`;
+      document.getElementById("monsterBarFill").style.width = `${Math.min(100, (mExp / 25) * 100)}%`;
+
+      document.querySelectorAll(".monster-chip").forEach(chip => {
+        chip.classList.toggle("selected", chip.getAttribute("data-m") === mEmoji);
+      });
+
+      const historyListEl = document.getElementById("dailyHistoryList");
+      const historyItems = role.dailyHistory || [];
+      const todayHasProgress = doneCount > 0 || (role.todayEarnedStars || 0) > 0;
+      const displayStreak = (role.streak || 0) + (todayHasProgress ? 1 : 0);
+      const passedDaysCount = historyItems.length + (todayHasProgress ? 1 : 0);
+
+      document.getElementById("streakDaysNum").textContent = `🔥 ${displayStreak} 天`;
+      document.getElementById("totalPassedDaysNum").textContent = `🏅 ${passedDaysCount} 天`;
+
+      const todayRowHtml = `
+        <div class="history-item">
+          <div>
+            <strong>${getTodayStr()}（今天進行中）</strong>
+            <div style="font-size:0.82rem; color:var(--muted);">已完成 ${doneCount}/${totalCount} 建築 · 今日獲得 +${role.todayEarnedStars || 0} ⭐</div>
+          </div>
+          <span class="${allDone ? "full-pass-pill" : "partial-pass-pill"}">${allDone ? "🌟 全通關" : "進行中"}</span>
+        </div>
+      `;
+
+      const pastRowsHtml = historyItems.map(h => `
+        <div class="history-item">
+          <div>
+            <strong>${h.date}</strong>
+            <div style="font-size:0.82rem; color:var(--muted);">完成 ${h.doneCount}/${h.totalCount} 建築 · 獲得 +${h.earnedStars} ⭐</div>
+          </div>
+          <span class="${h.allPassed ? "full-pass-pill" : "partial-pass-pill"}">${h.allPassed ? "🌟 全通關" : "✅ 有通關"}</span>
+        </div>
+      `).join("");
+
+      historyListEl.innerHTML = todayRowHtml + (pastRowsHtml || `<div style="color:var(--muted); font-size:0.88rem; padding-top:8px;">跨日結算後，過去每一天的通關紀錄都會保留在這裡喔！</div>`);
+
+      const lockedManageEl = document.getElementById("lockedTaskManageList");
+      const doneTasks = role.tasks
+        .map((t, idx) => ({ task: t, idx }))
+        .filter(item => item.task.done);
+
+      if (doneTasks.length === 0) {
+        lockedManageEl.innerHTML = `<div style="color:var(--muted); font-size:0.9rem;">目前沒有已領星鎖定的關卡。</div>`;
+      } else {
+        lockedManageEl.innerHTML = doneTasks.map(({ task, idx }) => `
+          <div class="manage-item">
+            <div style="font-weight:800; font-size:0.94rem;">
+              🔒 第 ${idx + 1} 建築 ${inferLandmark(task)} ${task.title}
+              <span style="color:#15803d;">(已領 +${task.stars}⭐)</span>
+            </div>
+            <button type="button" class="toy-btn toy-soft toy-sm" onclick="toggleTask('${task.id}', true)">🔓 退回星星並取消</button>
+          </div>
+        `).join("");
+      }
+
+      const ticketListEl = document.getElementById("ticketList");
+      const tickets = role.tickets || [];
+      if (tickets.length === 0) {
+        ticketListEl.innerHTML = `<div style="color:var(--muted); font-size:0.92rem;">還沒有兌換票券喔，累積星星來換一張吧！</div>`;
+      } else {
+        ticketListEl.innerHTML = tickets.map(tk => `
+          <div class="ticket-item">
+            <div>
+              <div style="font-weight:900; font-size:1.02rem;">${tk.icon} ${tk.title}</div>
+              <div style="font-size:0.84rem; color:var(--muted);">${tk.desc} · ${tk.createdAt}</div>
+            </div>
+            <button type="button" class="toy-btn toy-gold toy-sm" onclick="useTicket('${tk.id}')">核銷使用</button>
+          </div>
+        `).join("");
+      }
+
+      const rewardGridEl = document.getElementById("rewardGrid");
+      rewardGridEl.innerHTML = role.rewards.map(rw => {
+        const canAfford = role.stars >= rw.cost;
+        return `
+          <div class="reward-card">
+            <div>
+              <div class="reward-icon">${rw.icon}</div>
+              <div class="reward-title">${rw.title}</div>
+              <div class="reward-desc">${rw.desc}</div>
+              <span class="reward-cost">需要 ${rw.cost} ⭐</span>
+            </div>
+            <button type="button" class="toy-btn ${canAfford ? "toy-gold" : "toy-soft"} toy-block" onclick="redeemReward('${rw.id}')">
+              ${canAfford ? "🎁 立即兌換" : `還差 ${rw.cost - role.stars} ⭐`}
+            </button>
+          </div>
+        `;
+      }).join("");
+
+      const ledgerListEl = document.getElementById("ledgerList");
+      const logs = role.logs || [];
+      if (logs.length === 0) {
+        ledgerListEl.innerHTML = `<div style="color:var(--muted); font-size:0.92rem;">尚無星星紀錄，通過第一個建築就會記在這裡喔！</div>`;
+      } else {
+        ledgerListEl.innerHTML = logs.map(l => {
+          const isPlus = l.delta > 0;
+          const isMinus = l.delta < 0;
+          const badgeText = isPlus ? `+${l.delta} ⭐` : isMinus ? `${l.delta} ⭐` : `已使用`;
+          const cls = isPlus ? "log-plus" : isMinus ? "log-minus" : "task-desc";
+          return `
+            <div class="log-item">
+              <div>
+                <div style="font-weight:800;">${l.text}</div>
+                <div style="font-size:0.8rem; color:var(--muted);">${l.time}</div>
+              </div>
+              <div class="${cls}">${badgeText}</div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      document.getElementById("settingsRoleLabel").textContent =
+        `${rKey === "kinder" ? "🦖 大班" : "🐱 國小"}（${role.name}）`;
+      document.getElementById("editRoleNameInput").value = role.name;
+
+      const isElem = rKey === "elem";
+      document.getElementById("tabletMinutesSettingBox").style.display = isElem ? "flex" : "none";
+      document.getElementById("newTaskCoreRow").style.display = isElem ? "flex" : "none";
+      if (isElem) {
+        document.getElementById("tabletMinutesSelect").value = String(role.tabletMinutes || 20);
+      }
+
+      const manageEl = document.getElementById("manageTaskList");
+      manageEl.innerHTML = role.tasks.map((t, idx) => `
+        <div class="manage-item">
+          <div style="font-weight:800; font-size:0.95rem;">
+            第 ${idx + 1} 建築 ${inferLandmark(t)} ${t.title}
+            ${t.done ? `<span style="color:#334155; font-size:0.8rem;">[🔒已領星鎖定]</span>` : ""}
+            ${t.requiredPhoto && isElem ? `<span style="color:#b91c1c; font-size:0.8rem;">[核心必要]</span>` : (t.core && isElem ? `<span style="color:#b91c1c; font-size:0.8rem;">[核心]</span>` : "")}
+            <span style="color:var(--muted); font-weight:600;">(+${t.stars}⭐)</span>
+          </div>
+          <button type="button" class="toy-btn toy-soft toy-sm" onclick="deleteTask('${t.id}')">刪除</button>
+        </div>
+      `).join("");
+
+      switchTab(appData.currentTab || "tasks");
+    }
+
+    function renderAll() {
+      renderHomeStats();
+      renderMainScreen();
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) checkMidnightRollover(true);
+    });
+    window.addEventListener("focus", () => checkMidnightRollover(true));
+    setInterval(() => checkMidnightRollover(true), 30000);
+
+    renderAll();
+  </script>
+</body>
+</html>
