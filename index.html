@@ -1452,6 +1452,25 @@
 
   <script>
     const STORAGE_KEY = "kids_toy_task_adventure_stable_v5";
+    const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCnOd3otY4FZtw5RFIhadHd9WxJdONI2Lg",
+  authDomain: "daily-task-map.firebaseapp.com",
+  databaseURL: "https://daily-task-map-default-rtdb.firebaseio.com",
+  projectId: "daily-task-map",
+  storageBucket: "daily-task-map.firebasestorage.app",
+  messagingSenderId: "383913657323",
+  appId: "1:383913657323:web:8cff868d60dfec67268fae",
+  measurementId: "G-DNVGQDNBRK"
+};
+
+// 初始化 Firebase
+firebase.initializeApp(FIREBASE_CONFIG);
+const db = firebase.database();
+let activeRoomRef = null;
+let lastUpdatedAt = 0;
+let isApplyingCloud = false;
+let cloudConnected = false;
+
     const WINDOW_NAME_PREFIX = "KIDS_ADVENTURE_STATE::";
     const RING_CIRCUMFERENCE = 2 * Math.PI * 88;
     const FLOWER_GOAL_WATERS = 10;
@@ -1679,24 +1698,66 @@
     let appData = loadData();
 
     function saveData() {
-      const serialized = JSON.stringify(appData);
-      let lsOk = false;
-      try {
-        localStorage.setItem(STORAGE_KEY, serialized);
-        const check = localStorage.getItem(STORAGE_KEY);
-        if (check === serialized) lsOk = true;
-      } catch {
-        lsOk = false;
+  const serialized = JSON.stringify(appData);
+  let lsOk = false;
+  try {
+    localStorage.setItem(STORAGE_KEY, serialized);
+    const check = localStorage.getItem(STORAGE_KEY);
+    if (check === serialized) lsOk = true;
+  } catch {
+    lsOk = false;
+  }
+  isStorageRestricted = !lsOk;
+
+  try {
+    window.name = WINDOW_NAME_PREFIX + serialized;
+  } catch {}
+
+  // 每次本機存檔時，自動更新時間戳記並推送至雲端
+  if (!isApplyingCloud) {
+    appData.updatedAt = Date.now();
+    lastUpdatedAt = appData.updatedAt;
+  }
+  pushToCloud();
+}
+
+function isFirebaseConfigured() {
+  return Boolean(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.databaseURL);
+}
+
+// 實時監聽：當雲端有新資料時，會自動觸發更新網頁
+function startCloudSync() {
+  if (!isFirebaseConfigured()) return;
+  if (activeRoomRef) activeRoomRef.off();
+  
+  activeRoomRef = db.ref(`rooms/hsu-family-room`); // 預設房間代號
+  activeRoomRef.on('value', (snapshot) => {
+    const remoteJson = snapshot.val();
+    if (remoteJson) {
+      const remoteTs = remoteJson.updatedAt || 0;
+      if (remoteTs > lastUpdatedAt) {
+        isApplyingCloud = true;
+        appData = normalizeLoadedData(remoteJson);
+        lastUpdatedAt = appData.updatedAt;
+        saveData(); 
+        renderAll();
+        isApplyingCloud = false;
       }
-      isStorageRestricted = !lsOk;
-
-      try {
-        window.name = WINDOW_NAME_PREFIX + serialized;
-      } catch {}
+      cloudConnected = true;
     }
+  });
+}
 
-    saveData();
-
+// 推送本機進度到 Firebase 雲端
+async function pushToCloud() {
+  if (!isFirebaseConfigured()) return;
+  try {
+    await db.ref(`rooms/hsu-family-room`).set(appData);
+    cloudConnected = true;
+  } catch {
+    cloudConnected = false;
+  }
+}
     function checkMidnightRollover(notifyIfChanged = true) {
       const nowToday = getTodayStr();
       const changed = settleDayIfNeeded(appData, nowToday);
@@ -2903,6 +2964,7 @@
     }
 
     function renderAll() {
+      startCloudSync();
       renderHomeStats();
       renderMainScreen();
     }
