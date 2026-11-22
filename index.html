@@ -1,3 +1,8 @@
+
+
+
+「HTML」圖示
+index
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -1003,6 +1008,30 @@
     .modal-row { display: flex; gap: 10px; }
     .modal-row .toy-btn { flex: 1; }
 
+    .pin-input {
+      font-size: 1.8rem;
+      letter-spacing: 0.5rem;
+      text-align: center;
+      font-weight: 900;
+      padding: 12px;
+      margin: 14px 0 6px;
+      border: 3px solid #cbd5e1;
+      border-radius: 18px;
+    }
+
+    .pin-input:focus {
+      outline: none;
+      border-color: var(--primary, #ff8c42);
+    }
+
+    .pin-error {
+      color: #dc2626;
+      font-size: 0.88rem;
+      font-weight: 800;
+      min-height: 1.2em;
+      margin-bottom: 10px;
+    }
+
     .toast {
       position: fixed;
       top: 18px;
@@ -1240,8 +1269,22 @@
 
       <div class="tab-page" id="page-settings">
         <div class="panel-card">
-          <div class="section-title" style="margin-top:0;">⚙️ 家長設定區</div>
+          <div class="section-title" style="margin-top:0;">
+            <span>⚙️ 家長設定區</span>
+            <button type="button" class="toy-btn toy-soft toy-sm" onclick="lockParentSettings()">🔒 立即上鎖</button>
+          </div>
           <p class="task-desc" style="margin-bottom:14px;">目前正在設定：<strong id="settingsRoleLabel"></strong></p>
+
+          <div class="form-grid">
+            <label style="font-weight:800; font-size:0.92rem;">🔐 修改家長 PIN 碼（4 位數字，全家人共用）</label>
+            <div style="display:flex; gap:8px;">
+              <input type="password" inputmode="numeric" maxlength="4" id="newParentPinInput" placeholder="輸入新 4 位數字密碼" />
+              <button type="button" class="toy-btn toy-primary toy-sm" onclick="saveNewParentPin()">更新密碼</button>
+            </div>
+            <div style="font-size:0.82rem; color:var(--muted);">預設密碼為 <strong>1234</strong>，修改後會自動同步到雲端。</div>
+          </div>
+
+          <hr style="border:none; border-top:1px solid #e2e8f0; margin:16px 0;" />
 
           <div class="form-grid">
             <label style="font-weight:800; font-size:0.92rem;">角色暱稱</label>
@@ -1389,6 +1432,29 @@
     </button>
   </nav>
 
+  <div class="modal-backdrop" id="pinModal">
+    <div class="modal-card">
+      <div style="font-size:2.4rem;">🔐</div>
+      <h3 style="margin:6px 0 4px; font-size:1.28rem;">家長驗證 PIN 碼</h3>
+      <p style="margin:0; font-size:0.9rem; color:var(--muted);">請輸入 4 位數字家長密碼才能進入「家長設定」</p>
+      <input
+        type="password"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        maxlength="4"
+        id="pinModalInput"
+        class="pin-input"
+        placeholder="••••"
+        onkeydown="if(event.key==='Enter') confirmParentPin()"
+      />
+      <div class="pin-error" id="pinModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="toy-btn toy-primary toy-block" onclick="confirmParentPin()">🔓 確認解鎖</button>
+        <button type="button" class="toy-btn toy-soft toy-sm" onclick="closePinModal()">取消</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="landmarkModal">
     <div class="modal-card">
       <div style="font-size:2.4rem;" id="landmarkModalEmoji">🏠</div>
@@ -1453,32 +1519,35 @@
   <script>
     const STORAGE_KEY = "kids_toy_task_adventure_stable_v5";
     const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCnOd3otY4FZtw5RFIhadHd9WxJdONI2Lg",
-  authDomain: "daily-task-map.firebaseapp.com",
-  databaseURL: "https://daily-task-map-default-rtdb.firebaseio.com",
-  projectId: "daily-task-map",
-  storageBucket: "daily-task-map.firebasestorage.app",
-  messagingSenderId: "383913657323",
-  appId: "1:383913657323:web:8cff868d60dfec67268fae",
-  measurementId: "G-DNVGQDNBRK"
-};
+      apiKey: "AIzaSyCnOd3otY4FZtw5RFIhadHd9WxJdONI2Lg",
+      authDomain: "daily-task-map.firebaseapp.com",
+      databaseURL: "https://daily-task-map-default-rtdb.firebaseio.com",
+      projectId: "daily-task-map",
+      storageBucket: "daily-task-map.firebasestorage.app",
+      messagingSenderId: "383913657323",
+      appId: "1:383913657323:web:8cff868d60dfec67268fae",
+      measurementId: "G-DNVGQDNBRK"
+    };
 
-// 初始化 Firebase
-firebase.initializeApp(FIREBASE_CONFIG);
-const db = firebase.database();
-let activeRoomRef = null;
-let lastUpdatedAt = 0;
-let isApplyingCloud = false;
-let cloudConnected = false;
+    // 初始化 Firebase
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const db = firebase.database();
+    let activeRoomRef = null;
+    let lastUpdatedAt = 0;
+    let isApplyingCloud = false;
+    let cloudConnected = false;
 
     const WINDOW_NAME_PREFIX = "KIDS_ADVENTURE_STATE::";
     const RING_CIRCUMFERENCE = 2 * Math.PI * 88;
     const FLOWER_GOAL_WATERS = 10;
     const MONSTER_MAX_EXP = 30;
+    const DEFAULT_PARENT_PIN = "1234";
 
     let activeLandmarkTaskId = null;
     let walkerFocusIndex = 0;
     let isStorageRestricted = false;
+    let isParentUnlocked = false;
+    let pendingPinSuccessCallback = null;
 
     function getTodayStr() {
       const d = new Date();
@@ -1514,6 +1583,7 @@ let cloudConnected = false;
         lastDate: getTodayStr(),
         currentRole: null,
         currentTab: "tasks",
+        parentPin: DEFAULT_PARENT_PIN,
         roles: {
           kinder: {
             name: "小恐龍探險家",
@@ -1578,6 +1648,77 @@ let cloudConnected = false;
           }
         }
       };
+    }
+
+    function getParentPin() {
+      const pin = appData && typeof appData.parentPin === "string" ? appData.parentPin.trim() : "";
+      return /^\d{4}$/.test(pin) ? pin : DEFAULT_PARENT_PIN;
+    }
+
+    function requireParentAuth(actionCallback) {
+      if (isParentUnlocked) {
+        actionCallback();
+        return;
+      }
+      pendingPinSuccessCallback = actionCallback;
+      const inputEl = document.getElementById("pinModalInput");
+      const errEl = document.getElementById("pinModalError");
+      if (inputEl) inputEl.value = "";
+      if (errEl) errEl.textContent = "";
+      document.getElementById("pinModal").classList.add("open");
+      setTimeout(() => {
+        if (inputEl) inputEl.focus();
+      }, 60);
+    }
+
+    function confirmParentPin() {
+      const inputEl = document.getElementById("pinModalInput");
+      const errEl = document.getElementById("pinModalError");
+      const entered = inputEl ? inputEl.value.trim() : "";
+      if (entered !== getParentPin()) {
+        if (errEl) errEl.textContent = "❌ PIN 碼錯誤，請重新輸入 4 位數字";
+        if (inputEl) {
+          inputEl.value = "";
+          inputEl.focus();
+        }
+        return;
+      }
+      isParentUnlocked = true;
+      document.getElementById("pinModal").classList.remove("open");
+      const cb = pendingPinSuccessCallback;
+      pendingPinSuccessCallback = null;
+      if (typeof cb === "function") {
+        cb();
+      }
+    }
+
+    function closePinModal() {
+      pendingPinSuccessCallback = null;
+      document.getElementById("pinModal").classList.remove("open");
+    }
+
+    function lockParentSettings() {
+      isParentUnlocked = false;
+      showToast("🔒 家長設定已上鎖");
+      if (appData.currentTab === "settings") {
+        switchTab("tasks");
+      }
+    }
+
+    function saveNewParentPin() {
+      requireParentAuth(() => {
+        const inputEl = document.getElementById("newParentPinInput");
+        const val = inputEl ? inputEl.value.trim() : "";
+        if (!/^\d{4}$/.test(val)) {
+          showToast("⚠️ 請輸入剛好 4 位數字作為新密碼！");
+          if (inputEl) inputEl.focus();
+          return;
+        }
+        appData.parentPin = val;
+        if (inputEl) inputEl.value = "";
+        saveData();
+        showToast("✅ 家長 PIN 碼已更新並同步至雲端！");
+      });
     }
 
     function inferLandmark(task) {
@@ -1649,9 +1790,13 @@ let cloudConnected = false;
       const fresh = createDefaultData();
       const kRaw = (parsed && parsed.roles && parsed.roles.kinder) || {};
       const eRaw = (parsed && parsed.roles && parsed.roles.elem) || {};
+      const validPin = parsed && typeof parsed.parentPin === "string" && /^\d{4}$/.test(parsed.parentPin.trim())
+        ? parsed.parentPin.trim()
+        : DEFAULT_PARENT_PIN;
       const data = {
         ...fresh,
         ...parsed,
+        parentPin: validPin,
         roles: {
           kinder: {
             ...fresh.roles.kinder,
@@ -1698,66 +1843,67 @@ let cloudConnected = false;
     let appData = loadData();
 
     function saveData() {
-  const serialized = JSON.stringify(appData);
-  let lsOk = false;
-  try {
-    localStorage.setItem(STORAGE_KEY, serialized);
-    const check = localStorage.getItem(STORAGE_KEY);
-    if (check === serialized) lsOk = true;
-  } catch {
-    lsOk = false;
-  }
-  isStorageRestricted = !lsOk;
-
-  try {
-    window.name = WINDOW_NAME_PREFIX + serialized;
-  } catch {}
-
-  // 每次本機存檔時，自動更新時間戳記並推送至雲端
-  if (!isApplyingCloud) {
-    appData.updatedAt = Date.now();
-    lastUpdatedAt = appData.updatedAt;
-  }
-  pushToCloud();
-}
-
-function isFirebaseConfigured() {
-  return Boolean(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.databaseURL);
-}
-
-// 實時監聽：當雲端有新資料時，會自動觸發更新網頁
-function startCloudSync() {
-  if (!isFirebaseConfigured()) return;
-  if (activeRoomRef) activeRoomRef.off();
-  
-  activeRoomRef = db.ref(`rooms/hsu-family-room`); // 預設房間代號
-  activeRoomRef.on('value', (snapshot) => {
-    const remoteJson = snapshot.val();
-    if (remoteJson) {
-      const remoteTs = remoteJson.updatedAt || 0;
-      if (remoteTs > lastUpdatedAt) {
-        isApplyingCloud = true;
-        appData = normalizeLoadedData(remoteJson);
-        lastUpdatedAt = appData.updatedAt;
-        saveData(); 
-        renderAll();
-        isApplyingCloud = false;
+      const serialized = JSON.stringify(appData);
+      let lsOk = false;
+      try {
+        localStorage.setItem(STORAGE_KEY, serialized);
+        const check = localStorage.getItem(STORAGE_KEY);
+        if (check === serialized) lsOk = true;
+      } catch {
+        lsOk = false;
       }
-      cloudConnected = true;
-    }
-  });
-}
+      isStorageRestricted = !lsOk;
 
-// 推送本機進度到 Firebase 雲端
-async function pushToCloud() {
-  if (!isFirebaseConfigured()) return;
-  try {
-    await db.ref(`rooms/hsu-family-room`).set(appData);
-    cloudConnected = true;
-  } catch {
-    cloudConnected = false;
-  }
-}
+      try {
+        window.name = WINDOW_NAME_PREFIX + serialized;
+      } catch {}
+
+      // 每次本機存檔時，自動更新時間戳記並推送至雲端
+      if (!isApplyingCloud) {
+        appData.updatedAt = Date.now();
+        lastUpdatedAt = appData.updatedAt;
+      }
+      pushToCloud();
+    }
+
+    function isFirebaseConfigured() {
+      return Boolean(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.databaseURL);
+    }
+
+    // 實時監聽：當雲端有新資料時，會自動觸發更新網頁
+    function startCloudSync() {
+      if (!isFirebaseConfigured()) return;
+      if (activeRoomRef) activeRoomRef.off();
+
+      activeRoomRef = db.ref(`rooms/hsu-family-room`);
+      activeRoomRef.on('value', (snapshot) => {
+        const remoteJson = snapshot.val();
+        if (remoteJson) {
+          const remoteTs = remoteJson.updatedAt || 0;
+          if (remoteTs > lastUpdatedAt) {
+            isApplyingCloud = true;
+            appData = normalizeLoadedData(remoteJson);
+            lastUpdatedAt = appData.updatedAt;
+            saveData();
+            renderAll();
+            isApplyingCloud = false;
+          }
+          cloudConnected = true;
+        }
+      });
+    }
+
+    // 推送本機進度到 Firebase 雲端
+    async function pushToCloud() {
+      if (!isFirebaseConfigured()) return;
+      try {
+        await db.ref(`rooms/hsu-family-room`).set(appData);
+        cloudConnected = true;
+      } catch {
+        cloudConnected = false;
+      }
+    }
+
     function checkMidnightRollover(notifyIfChanged = true) {
       const nowToday = getTodayStr();
       const changed = settleDayIfNeeded(appData, nowToday);
@@ -1950,6 +2096,7 @@ async function pushToCloud() {
 
     function selectRole(roleKey) {
       checkMidnightRollover(false);
+      isParentUnlocked = false;
       appData.currentRole = roleKey;
       appData.currentTab = "tasks";
       walkerFocusIndex = getCurrentStationIndex(appData.roles[roleKey].tasks);
@@ -1960,13 +2107,14 @@ async function pushToCloud() {
     function backToRoleSelect() {
       pauseTimer();
       closeLandmarkModal();
+      closePinModal();
+      isParentUnlocked = false;
       appData.currentRole = null;
       saveData();
       renderAll();
     }
 
-    function switchTab(tabName, btnEl) {
-      checkMidnightRollover(true);
+    function applyTabSwitch(tabName, btnEl) {
       const validTab = document.getElementById(`page-${tabName}`) ? tabName : "tasks";
       appData.currentTab = validTab;
       saveData();
@@ -1981,6 +2129,18 @@ async function pushToCloud() {
         const matched = document.querySelector(`.nav-btn[data-tab="${validTab}"]`);
         if (matched) matched.classList.add("active");
       }
+    }
+
+    function switchTab(tabName, btnEl) {
+      checkMidnightRollover(true);
+      if (tabName === "settings" && !isParentUnlocked) {
+        requireParentAuth(() => {
+          applyTabSwitch("settings", btnEl);
+          showToast("🔓 家長設定已解鎖");
+        });
+        return;
+      }
+      applyTabSwitch(tabName, btnEl);
     }
 
     function addLog(roleObj, text, delta) {
@@ -2107,7 +2267,7 @@ async function pushToCloud() {
       openTimerForTask(taskId);
     }
 
-    function toggleTask(taskId, isParentOverride = false) {
+    function executeToggleTask(taskId, isParentOverride = false) {
       checkMidnightRollover(false);
       const rKey = appData.currentRole;
       if (!rKey) return;
@@ -2160,6 +2320,14 @@ async function pushToCloud() {
       saveData();
       renderMainScreen();
       renderHomeStats();
+    }
+
+    function toggleTask(taskId, isParentOverride = false) {
+      if (isParentOverride) {
+        requireParentAuth(() => executeToggleTask(taskId, true));
+      } else {
+        executeToggleTask(taskId, false);
+      }
     }
 
     function resetCurrentRoleTasks() {
@@ -2224,167 +2392,179 @@ async function pushToCloud() {
     }
 
     function saveRoleName() {
-      const rKey = appData.currentRole;
-      if (!rKey) return;
-      const val = document.getElementById("editRoleNameInput").value.trim();
-      if (!val) {
-        showToast("請輸入暱稱喔！");
-        return;
-      }
-      appData.roles[rKey].name = val;
-      saveData();
-      renderAll();
-      showToast("角色名稱已更新！");
+      requireParentAuth(() => {
+        const rKey = appData.currentRole;
+        if (!rKey) return;
+        const val = document.getElementById("editRoleNameInput").value.trim();
+        if (!val) {
+          showToast("請輸入暱稱喔！");
+          return;
+        }
+        appData.roles[rKey].name = val;
+        saveData();
+        renderAll();
+        showToast("角色名稱已更新！");
+      });
     }
 
     function saveTabletMinutes() {
-      const rKey = appData.currentRole;
-      if (rKey !== "elem") return;
-      const mins = parseInt(document.getElementById("tabletMinutesSelect").value, 10) || 20;
-      appData.roles.elem.tabletMinutes = mins;
-      saveData();
-      renderMainScreen();
-      showToast(`已設定解鎖平板休閒時間為 ${mins} 分鐘`);
+      requireParentAuth(() => {
+        const rKey = appData.currentRole;
+        if (rKey !== "elem") return;
+        const mins = parseInt(document.getElementById("tabletMinutesSelect").value, 10) || 20;
+        appData.roles.elem.tabletMinutes = mins;
+        saveData();
+        renderMainScreen();
+        showToast(`已設定解鎖平板休閒時間為 ${mins} 分鐘`);
+      });
     }
 
     function adjustStars(delta) {
-      const rKey = appData.currentRole;
-      if (!rKey) return;
-      const role = appData.roles[rKey];
-      role.stars = Math.max(0, role.stars + delta);
-      addLog(role, `家長調整星星`, delta);
-      saveData();
-      renderMainScreen();
-      renderHomeStats();
-      showToast(`星星已更新為 ${role.stars} ⭐`);
+      requireParentAuth(() => {
+        const rKey = appData.currentRole;
+        if (!rKey) return;
+        const role = appData.roles[rKey];
+        role.stars = Math.max(0, role.stars + delta);
+        addLog(role, `家長調整星星`, delta);
+        saveData();
+        renderMainScreen();
+        renderHomeStats();
+        showToast(`星星已更新為 ${role.stars} ⭐`);
+      });
     }
 
     function addYesterdayHistory() {
-      const rKey = appData.currentRole;
-      if (!rKey) {
-        showToast("請先選擇角色！");
-        return;
-      }
-      const role = appData.roles[rKey];
-      const doneInput = document.getElementById("backfillDoneCount");
-      const starsInput = document.getElementById("backfillEarnedStars");
-      const addToBalanceEl = document.getElementById("backfillAddStarsToBalance");
-      const allPassedEl = document.getElementById("backfillAllPassed");
+      requireParentAuth(() => {
+        const rKey = appData.currentRole;
+        if (!rKey) {
+          showToast("請先選擇角色！");
+          return;
+        }
+        const role = appData.roles[rKey];
+        const doneInput = document.getElementById("backfillDoneCount");
+        const starsInput = document.getElementById("backfillEarnedStars");
+        const addToBalanceEl = document.getElementById("backfillAddStarsToBalance");
+        const allPassedEl = document.getElementById("backfillAllPassed");
 
-      const doneCount = Math.max(0, parseInt(doneInput.value, 10) || 0);
-      const earnedStars = Math.max(0, parseInt(starsInput.value, 10) || 0);
-      const totalCount = role.tasks.length;
-      const allPassed = Boolean(allPassedEl && allPassedEl.checked) || (totalCount > 0 && doneCount >= totalCount);
-      const yesterdayStr = getYesterdayStrFromDateStr(getTodayStr());
+        const doneCount = Math.max(0, parseInt(doneInput.value, 10) || 0);
+        const earnedStars = Math.max(0, parseInt(starsInput.value, 10) || 0);
+        const totalCount = role.tasks.length;
+        const allPassed = Boolean(allPassedEl && allPassedEl.checked) || (totalCount > 0 && doneCount >= totalCount);
+        const yesterdayStr = getYesterdayStrFromDateStr(getTodayStr());
 
-      role.dailyHistory = role.dailyHistory || [];
-      const existingIdx = role.dailyHistory.findIndex(item => item.date === yesterdayStr);
-      const record = {
-        date: yesterdayStr,
-        doneCount,
-        totalCount,
-        earnedStars,
-        allPassed
-      };
+        role.dailyHistory = role.dailyHistory || [];
+        const existingIdx = role.dailyHistory.findIndex(item => item.date === yesterdayStr);
+        const record = {
+          date: yesterdayStr,
+          doneCount,
+          totalCount,
+          earnedStars,
+          allPassed
+        };
 
-      if (existingIdx >= 0) {
-        role.dailyHistory[existingIdx] = record;
-      } else {
-        role.dailyHistory.unshift(record);
-        role.dailyHistory.sort((a, b) => b.date.localeCompare(a.date));
-      }
+        if (existingIdx >= 0) {
+          role.dailyHistory[existingIdx] = record;
+        } else {
+          role.dailyHistory.unshift(record);
+          role.dailyHistory.sort((a, b) => b.date.localeCompare(a.date));
+        }
 
-      if (doneCount > 0 || earnedStars > 0 || allPassed) {
-        role.streak = Math.max(role.streak || 0, 1);
-      }
+        if (doneCount > 0 || earnedStars > 0 || allPassed) {
+          role.streak = Math.max(role.streak || 0, 1);
+        }
 
-      if (addToBalanceEl && addToBalanceEl.checked && earnedStars > 0) {
-        role.stars += earnedStars;
-        addLog(role, `家長補登昨日（${yesterdayStr}）星星`, earnedStars);
-      } else {
-        addLog(role, `家長補登昨日（${yesterdayStr}）通關紀錄（完成 ${doneCount} 項）`, 0);
-      }
+        if (addToBalanceEl && addToBalanceEl.checked && earnedStars > 0) {
+          role.stars += earnedStars;
+          addLog(role, `家長補登昨日（${yesterdayStr}）星星`, earnedStars);
+        } else {
+          addLog(role, `家長補登昨日（${yesterdayStr}）通關紀錄（完成 ${doneCount} 項）`, 0);
+        }
 
-      doneInput.value = "";
-      starsInput.value = "";
-      if (addToBalanceEl) addToBalanceEl.checked = false;
-      if (allPassedEl) allPassedEl.checked = false;
+        doneInput.value = "";
+        starsInput.value = "";
+        if (addToBalanceEl) addToBalanceEl.checked = false;
+        if (allPassedEl) allPassedEl.checked = false;
 
-      saveData();
-      renderMainScreen();
-      renderHomeStats();
-      showToast(`✅ 已儲存昨日（${yesterdayStr}）通關紀錄！`);
+        saveData();
+        renderMainScreen();
+        renderHomeStats();
+        showToast(`✅ 已儲存昨日（${yesterdayStr}）通關紀錄！`);
+      });
     }
 
     function addCustomTask() {
-      const rKey = appData.currentRole;
-      if (!rKey) {
-        showToast("請先選擇角色再新增任務！");
-        return;
-      }
-      const landmarkEl = document.getElementById("newTaskIcon");
-      const titleEl = document.getElementById("newTaskTitle");
-      const descEl = document.getElementById("newTaskDesc");
-      const starsEl = document.getElementById("newTaskStars");
-      const minsEl = document.getElementById("newTaskMinutes");
-      const coreEl = document.getElementById("newTaskCore");
+      requireParentAuth(() => {
+        const rKey = appData.currentRole;
+        if (!rKey) {
+          showToast("請先選擇角色再新增任務！");
+          return;
+        }
+        const landmarkEl = document.getElementById("newTaskIcon");
+        const titleEl = document.getElementById("newTaskTitle");
+        const descEl = document.getElementById("newTaskDesc");
+        const starsEl = document.getElementById("newTaskStars");
+        const minsEl = document.getElementById("newTaskMinutes");
+        const coreEl = document.getElementById("newTaskCore");
 
-      const landmark = (landmarkEl && landmarkEl.value) ? landmarkEl.value : "🏠";
-      const title = titleEl ? titleEl.value.trim() : "";
-      const rawDesc = descEl ? descEl.value.trim() : "";
-      const stars = starsEl ? (parseInt(starsEl.value, 10) || 1) : 1;
-      const minutes = minsEl ? (parseInt(minsEl.value, 10) || 0) : 0;
-      const core = rKey === "elem" && coreEl && coreEl.checked;
+        const landmark = (landmarkEl && landmarkEl.value) ? landmarkEl.value : "🏠";
+        const title = titleEl ? titleEl.value.trim() : "";
+        const rawDesc = descEl ? descEl.value.trim() : "";
+        const stars = starsEl ? (parseInt(starsEl.value, 10) || 1) : 1;
+        const minutes = minsEl ? (parseInt(minsEl.value, 10) || 0) : 0;
+        const core = rKey === "elem" && coreEl && coreEl.checked;
 
-      if (!title) {
-        showToast("⚠️ 請先輸入「新任務名稱」再按加入！");
-        if (titleEl) titleEl.focus();
-        return;
-      }
+        if (!title) {
+          showToast("⚠️ 請先輸入「新任務名稱」再按加入！");
+          if (titleEl) titleEl.focus();
+          return;
+        }
 
-      const desc = rawDesc || `專心完成「${title}」，做到後就可以領取星星前往下一個建築囉！`;
-      const newTask = {
-        id: "custom_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
-        landmark,
-        landmarkName: "自訂建築",
-        icon: landmark,
-        title,
-        desc,
-        stars,
-        minutes,
-        core,
-        requiredPhoto: false,
-        done: false
-      };
+        const desc = rawDesc || `專心完成「${title}」，做到後就可以領取星星前往下一個建築囉！`;
+        const newTask = {
+          id: "custom_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+          landmark,
+          landmarkName: "自訂建築",
+          icon: landmark,
+          title,
+          desc,
+          stars,
+          minutes,
+          core,
+          requiredPhoto: false,
+          done: false
+        };
 
-      appData.roles[rKey].tasks.push(newTask);
+        appData.roles[rKey].tasks.push(newTask);
 
-      if (titleEl) titleEl.value = "";
-      if (descEl) descEl.value = "";
-      if (coreEl) coreEl.checked = false;
+        if (titleEl) titleEl.value = "";
+        if (descEl) descEl.value = "";
+        if (coreEl) coreEl.checked = false;
 
-      walkerFocusIndex = getCurrentStationIndex(appData.roles[rKey].tasks);
-      saveData();
-      renderMainScreen();
-      renderHomeStats();
-      showToast(`✅ 已成功新增第 ${appData.roles[rKey].tasks.length} 建築：「${title}」`);
+        walkerFocusIndex = getCurrentStationIndex(appData.roles[rKey].tasks);
+        saveData();
+        renderMainScreen();
+        renderHomeStats();
+        showToast(`✅ 已成功新增第 ${appData.roles[rKey].tasks.length} 建築：「${title}」`);
+      });
     }
 
     function deleteTask(taskId) {
-      const rKey = appData.currentRole;
-      if (!rKey) return;
-      const role = appData.roles[rKey];
-      const target = role.tasks.find(t => t.id === taskId);
-      if (target && target.done) {
-        showToast("🔒 此關卡已領星鎖定，請先在「已領星關卡管理」退回星星後再刪除");
-        return;
-      }
-      role.tasks = role.tasks.filter(t => t.id !== taskId);
-      walkerFocusIndex = getCurrentStationIndex(role.tasks);
-      saveData();
-      renderMainScreen();
-      renderHomeStats();
-      showToast("已移除該地圖建築");
+      requireParentAuth(() => {
+        const rKey = appData.currentRole;
+        if (!rKey) return;
+        const role = appData.roles[rKey];
+        const target = role.tasks.find(t => t.id === taskId);
+        if (target && target.done) {
+          showToast("🔒 此關卡已領星鎖定，請先在「已領星關卡管理」退回星星後再刪除");
+          return;
+        }
+        role.tasks = role.tasks.filter(t => t.id !== taskId);
+        walkerFocusIndex = getCurrentStationIndex(role.tasks);
+        saveData();
+        renderMainScreen();
+        renderHomeStats();
+        showToast("已移除該地圖建築");
+      });
     }
 
     function exportBackupCode() {
@@ -2405,47 +2585,51 @@ async function pushToCloud() {
     }
 
     function importBackupCode() {
-      const code = prompt("請貼上先前複製的紀錄備份碼：");
-      if (!code || !code.trim()) return;
-      try {
-        const jsonStr = decodeURIComponent(escape(atob(code.trim())));
-        const parsed = JSON.parse(jsonStr);
-        appData = normalizeLoadedData(parsed);
-        saveData();
-        renderAll();
-        showToast("🎉 已成功還原所有星星與自訂任務紀錄！");
-      } catch {
-        showToast("⚠️ 備份碼格式不正確，請確認有完整複製");
-      }
+      requireParentAuth(() => {
+        const code = prompt("請貼上先前複製的紀錄備份碼：");
+        if (!code || !code.trim()) return;
+        try {
+          const jsonStr = decodeURIComponent(escape(atob(code.trim())));
+          const parsed = JSON.parse(jsonStr);
+          appData = normalizeLoadedData(parsed);
+          saveData();
+          renderAll();
+          showToast("🎉 已成功還原所有星星與自訂任務紀錄！");
+        } catch {
+          showToast("⚠️ 備份碼格式不正確，請確認有完整複製");
+        }
+      });
     }
 
     function restoreDefaultRoleData() {
-      const rKey = appData.currentRole;
-      if (!rKey) return;
-      if (!confirm("確定要將此角色的導航建築與獎勵恢復成預設清單嗎？")) return;
-      const fresh = createDefaultData().roles[rKey];
-      const keepStars = appData.roles[rKey].stars;
-      const keepTickets = appData.roles[rKey].tickets || [];
-      const keepLogs = appData.roles[rKey].logs || [];
-      const keepStreak = appData.roles[rKey].streak || 0;
-      const keepHistory = appData.roles[rKey].dailyHistory || [];
-      const keepEarned = appData.roles[rKey].todayEarnedStars || 0;
-      const keepNurture = { ...createDefaultNurture(), ...(appData.roles[rKey].nurture || {}) };
-      appData.roles[rKey] = {
-        ...fresh,
-        stars: keepStars,
-        tickets: keepTickets,
-        logs: keepLogs,
-        streak: keepStreak,
-        dailyHistory: keepHistory,
-        todayEarnedStars: keepEarned,
-        nurture: keepNurture
-      };
-      walkerFocusIndex = getCurrentStationIndex(appData.roles[rKey].tasks);
-      saveData();
-      renderMainScreen();
-      renderHomeStats();
-      showToast("已恢復預設導航建築與獎勵清單！");
+      requireParentAuth(() => {
+        const rKey = appData.currentRole;
+        if (!rKey) return;
+        if (!confirm("確定要將此角色的導航建築與獎勵恢復成預設清單嗎？")) return;
+        const fresh = createDefaultData().roles[rKey];
+        const keepStars = appData.roles[rKey].stars;
+        const keepTickets = appData.roles[rKey].tickets || [];
+        const keepLogs = appData.roles[rKey].logs || [];
+        const keepStreak = appData.roles[rKey].streak || 0;
+        const keepHistory = appData.roles[rKey].dailyHistory || [];
+        const keepEarned = appData.roles[rKey].todayEarnedStars || 0;
+        const keepNurture = { ...createDefaultNurture(), ...(appData.roles[rKey].nurture || {}) };
+        appData.roles[rKey] = {
+          ...fresh,
+          stars: keepStars,
+          tickets: keepTickets,
+          logs: keepLogs,
+          streak: keepStreak,
+          dailyHistory: keepHistory,
+          todayEarnedStars: keepEarned,
+          nurture: keepNurture
+        };
+        walkerFocusIndex = getCurrentStationIndex(appData.roles[rKey].tasks);
+        saveData();
+        renderMainScreen();
+        renderHomeStats();
+        showToast("已恢復預設導航建築與獎勵清單！");
+      });
     }
 
     let timerState = {
@@ -2960,7 +3144,10 @@ async function pushToCloud() {
         </div>
       `).join("");
 
-      switchTab(appData.currentTab || "tasks");
+      const targetTab = (appData.currentTab === "settings" && !isParentUnlocked)
+        ? "tasks"
+        : (appData.currentTab || "tasks");
+      applyTabSwitch(targetTab);
     }
 
     function renderAll() {
@@ -2979,3 +3166,4 @@ async function pushToCloud() {
   </script>
 </body>
 </html>
+正在分析
